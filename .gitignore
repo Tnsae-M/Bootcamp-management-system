@@ -1,0 +1,29 @@
+node_modules/
+dist/
+build/
+.cursor/
+.claude/
+*.log
+.DS_Store
+
+# Env / credential files — never commit any variant
+.env
+.env*
+*.env
+*.env*
+.env for BMS.txt
+
+# Ignore backend seed scripts
+/backend/seed*.js
+/backend/*seed*.js
+
+# Ignore scratch seed scripts
+/scratch/seed*.js
+/scratch/*seed*.js
+
+tasks.md
+plan.md
+implementation_plan.md
+csec-astu-color-system.md
+HANDOFF-2026-07-25.md
+ACTIONPLAN.md

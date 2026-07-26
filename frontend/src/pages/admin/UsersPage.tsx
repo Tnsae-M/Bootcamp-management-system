@@ -1,0 +1,414 @@
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../app/store';
+import { User, Mail, Shield, Activity, Edit, Plus, Trash2, UserPlus, Search, MoreHorizontal, KeyRound } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usersService } from '@/services/users.service';
+import { divisionsService } from '@/services/divisions.service';
+import { bootcampsService } from '@/services/bootcamps.service';
+import { fetchUsers, createUser, updateUser } from '@/features/users/usersSlice';
+import { authService } from '@/services/auth.service';
+
+import { 
+  Button, 
+  Modal, 
+  Card,
+  Table, 
+  TableHeader, 
+  TableBody, 
+  TableRow, 
+  TableHead, 
+  TableCell,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  FormField,
+  Input,
+  Skeleton,
+  EmptyState
+} from '@/components/ui';
+import { toast } from 'sonner';
+
+export default function UsersPage() {
+  const dispatch = useDispatch() as any;
+  const { users, loading } = useSelector((state: RootState) => state.users);
+  const { searchTerm } = useSelector((state: RootState) => state.ui);
+  const { user: currentUser } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    roles: ['STUDENT'],
+    division: '',
+    bootcamps: [] as string[],
+    status: 'active'
+  });
+  const [divisions, setDivisions] = useState<any[]>([]);
+  const [bootcampsList, setBootcampsList] = useState<any[]>([]);
+
+  const fetchUsersList = () => {
+    dispatch(fetchUsers(undefined));
+  };
+
+
+  useEffect(() => {
+    fetchUsersList();
+    divisionsService.getDivisions().then(res => {
+      const payload = res.data ?? res;
+      setDivisions(Array.isArray(payload) ? payload : payload?.data ?? []);
+    }).catch(() => setDivisions([]));
+
+    bootcampsService.getBootcamps().then(res => {
+      const payload = res.data ?? res;
+      setBootcampsList(Array.isArray(payload) ? payload : payload?.data ?? []);
+    }).catch(() => setBootcampsList([]));
+  }, [dispatch]);
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('createAdmin') === 'true' && (currentUser?.roles || []).includes('SUPER ADMIN')) {
+      handleOpenCreate('ADMIN');
+    }
+  }, [location, currentUser]);
+
+  const filteredUsers = (users || []).filter((u) => 
+    (u.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+    (u.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
+    (u.roles || [u.role || '']).some(ro => String(ro).toLowerCase().includes((searchTerm || '').toLowerCase()))
+  );
+
+  const handleOpenCreate = (forcedRole?: string) => {
+    setEditingUserId(null);
+    const userRoles = (currentUser?.roles || []).map(r => r.toUpperCase());
+    const defaultRoles = forcedRole ? [forcedRole] : (userRoles.includes('SUPER ADMIN') ? ['ADMIN'] : ['STUDENT']);
+    setFormData({ name: '', email: '', password: '', roles: defaultRoles, division: '', bootcamps: [], status: 'active' });
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEdit = (user: any) => {
+    setEditingUserId(user._id);
+    setFormData({ 
+      name: user.name, 
+      email: user.email, 
+      password: '', 
+      roles: user.roles?.map((r: any) => String(r).toUpperCase()) || (user.role ? [String(user.role).toUpperCase()] : ['STUDENT']),
+      division: user.divisionId || user.division || '',
+      bootcamps: (user.bootcamps || []).map((bc: any) => bc.bootcampId?._id || bc.bootcampId || bc),
+      status: user.status || 'active'
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const payload: any = {
+        name: formData.name,
+        email: formData.email,
+        status: formData.status,
+        roles: formData.roles.map(r => r.toLowerCase()),
+        divisionId: formData.division || null,
+        bootcamps: formData.bootcamps
+      };
+
+      if (editingUserId) {
+        if (formData.password) payload.password = formData.password;
+        const result = await dispatch(updateUser({ id: editingUserId, data: payload }));
+        if (updateUser.fulfilled.match(result)) {
+            toast.success('User updated successfully');
+            setIsModalOpen(false);
+        } else {
+            toast.error(result.payload as string || 'Update failed');
+        }
+      } else {
+        payload.password = formData.password;
+        const result = await dispatch(createUser(payload));
+        if (createUser.fulfilled.match(result)) {
+            toast.success('User provisioned successfully');
+            setIsModalOpen(false);
+        } else {
+            toast.error(result.payload as string || 'Provisioning failed');
+        }
+      }
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message);
+    }
+  };
+
+  const handleAdminResetPassword = async (userId: string) => {
+    const newPassword = prompt("Enter new password for this user:");
+    if (!newPassword) return;
+    if (newPassword.length < 6) return toast.error("Password must be at least 6 characters");
+
+    try {
+      await authService.adminResetPassword(userId, { newPassword });
+      toast.success("User password has been reset and notified.");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to reset password");
+    }
+  };
+
+
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'active': return <Badge variant="success" className="bg-emerald-50 text-emerald-600 border-emerald-100 uppercase text-[9px] tracking-widest px-2">Active</Badge>;
+      case 'suspended': return <Badge variant="destructive" className="uppercase text-[9px] tracking-widest px-2">Suspended</Badge>;
+      default: return <Badge variant="secondary" className="uppercase text-[9px] tracking-widest px-2">{status || 'Pending'}</Badge>;
+    }
+  };
+
+  const getRoleBadge = (role: string) => {
+    const r = (role || 'Student').toUpperCase();
+    if (r === 'ADMIN' || r === 'SUPER ADMIN') return <span className="text-[10px] font-black text-brand-accent tracking-widest">{r}</span>;
+    if (r === 'INSTRUCTOR') return <span className="text-[10px] font-black text-violet-600 tracking-widest">{r}</span>;
+    return <span className="text-[10px] font-bold text-text-muted tracking-widest">{r}</span>;
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-text-main uppercase tracking-tight">User Directory</h1>
+          <p className="text-sm text-text-muted mt-1 font-medium italic">Identity provisioning and access control systems</p>
+        </div>
+
+        <Button onClick={() => handleOpenCreate()} className="shadow-lg shadow-brand-accent/20">
+          <Plus className="mr-2 h-4 w-4" /> Provision New User
+        </Button>
+      </div>
+
+      {/* TABLE SECTION */}
+      <Card className="overflow-hidden border-none shadow-sm bg-white">
+        {loading ? (
+          <div className="p-8 space-y-4">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <EmptyState 
+            title="No Users Found" 
+            description="Your search criteria did not match any users in the directory."
+            icon={<User />}
+          />
+        ) : (
+          <div className="overflow-x-auto no-scrollbar">
+            <Table>
+              <TableHeader className="bg-brand-primary/30">
+                <TableRow>
+                  <TableHead className="w-[300px]">Profile Identity</TableHead>
+                  <TableHead>System Access</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Availability</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((u) => (
+                  <TableRow key={u._id} className="hover:bg-brand-primary/10 transition-colors group">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 border border-brand-border">
+                          <AvatarFallback className="bg-brand-primary text-brand-accent font-bold text-xs uppercase">
+                            {u.name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-text-main text-sm tracking-tight">{u.name}</span>
+                          <span className="text-[11px] text-text-muted">{u.email}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {(u.roles && u.roles.length > 0 ? u.roles : [u.role || 'student']).map((r: string) => (
+                          <React.Fragment key={r}>{getRoleBadge(r)}</React.Fragment>
+                        ))}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs font-semibold text-text-muted uppercase tracking-tight">
+                        {(() => {
+                          // First try direct division assignment
+                          if (u.divisionId?.name) return u.divisionId.name;
+                          if (u.division) return u.division;
+                          
+                          // Derive division from bootcamp enrollments
+                          if (u.bootcamps && u.bootcamps.length > 0) {
+                            const userBootcamps = Array.isArray(u.bootcamps) ? u.bootcamps : [];
+                            const firstBootcamp = userBootcamps[0];
+                            
+                            // Check if bootcamp has division info
+                            if (firstBootcamp?.bootcampId?.divisionId?.name) {
+                              return firstBootcamp.bootcampId.divisionId.name;
+                            }
+                            if (firstBootcamp?.divisionId?.name) {
+                              return firstBootcamp.divisionId.name;
+                            }
+                            
+                            // Find division from bootcamps list
+                            const bootcampId = firstBootcamp.bootcampId?._id || firstBootcamp.bootcampId || firstBootcamp;
+                            const bootcamp = bootcampsList.find(bc => (bc._id || bc.id) === bootcampId);
+                            if (bootcamp?.divisionId?.name) {
+                              return bootcamp.divisionId.name;
+                            }
+                            if (bootcamp?.division) {
+                              return bootcamp.division;
+                            }
+                          }
+                          
+                          return 'Unassigned';
+                        })()}
+                      </span>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(u.status)}</TableCell>
+                    <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-brand-accent hover:bg-brand-primary" onClick={() => handleAdminResetPassword(u._id)}>
+                          <KeyRound className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-text-muted hover:bg-brand-primary" onClick={() => handleOpenEdit(u)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* USER MODAL */}
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        title={editingUserId ? "Modify Identity" : "Provision Identity"}
+        subtitle="Manage user access rights, roles, and departmental assignments."
+        icon={<UserPlus />}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <FormField label="Legal Name" required>
+            <Input 
+              required 
+              value={formData.name} 
+              onChange={e => setFormData(prev => ({...prev, name: e.target.value}))}
+              placeholder="e.g. John Doe" 
+            />
+          </FormField>
+          
+          <FormField label="Educational Email" required>
+            <Input 
+              required 
+              type="email" 
+              value={formData.email} 
+              onChange={e => setFormData(prev => ({...prev, email: e.target.value}))}
+              placeholder="j.doe@scholar.astu" 
+            />
+          </FormField>
+
+          <FormField label={editingUserId ? "New Identity Key (Optional)" : "Identity Key"} required={!editingUserId}>
+            <Input 
+              type="password" 
+              value={formData.password} 
+              onChange={e => setFormData(prev => ({...prev, password: e.target.value}))}
+              placeholder="••••••••" 
+            />
+          </FormField>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField label="Role Path">
+              <div className="flex flex-col gap-2 pt-1">
+                {['STUDENT', 'INSTRUCTOR', 'ADMIN'].map((r) => {
+                  const userRoles = (currentUser?.roles || []).map(ro => String(ro).toUpperCase());
+                  const isSuperAdmin = userRoles.includes('SUPER ADMIN');
+                  const isAdmin = userRoles.includes('ADMIN');
+
+                  if (isSuperAdmin && r !== 'ADMIN') return null;
+                  if (isAdmin && !isSuperAdmin && r === 'ADMIN') return null;
+                  
+                  return (
+                  <label key={r} className="inline-flex items-center gap-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      className="rounded border-brand-border text-brand-accent focus:ring-brand-accent"
+                      checked={formData.roles.includes(r)} 
+                      onChange={() => {
+                        setFormData(prev => {
+                          const has = prev.roles.includes(r);
+                          return {...prev, roles: has ? prev.roles.filter(role => role !== r) : [...prev.roles, r]};
+                        });
+                      }} 
+                    />
+                    <span className="text-xs font-bold text-text-main uppercase tracking-widest">{r}</span>
+                  </label>
+                )})}
+              </div>
+            </FormField>
+
+            <div className="space-y-4">
+              <FormField label="Division Unit">
+                <select 
+                  value={formData.division} 
+                  onChange={e => setFormData(prev => ({...prev, division: e.target.value}))} 
+                  className="w-full px-3 py-2 rounded-lg bg-brand-primary/40 border border-transparent text-sm font-medium outline-none focus:border-brand-accent transition-all appearance-none"
+                >
+                  <option value="">Unassigned</option>
+                  {divisions.map(d => (<option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>))}
+                </select>
+              </FormField>
+
+              <FormField label="Lifecycle Status">
+                <select 
+                  value={formData.status} 
+                  onChange={e => setFormData(prev => ({...prev, status: e.target.value}))}
+                  className="w-full px-3 py-2 rounded-lg bg-brand-primary/40 border border-transparent text-sm font-medium outline-none focus:border-brand-accent transition-all appearance-none"
+                >
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="graduated">Graduated</option>
+                </select>
+              </FormField>
+
+              <FormField label="Assign Bootcamps">
+                <div className="max-h-32 overflow-y-auto p-2 bg-brand-primary/40 rounded-lg space-y-2 no-scrollbar">
+                   {bootcampsList.map(bc => (
+                     <label key={bc._id} className="flex items-center gap-2 cursor-pointer">
+                       <input 
+                         type="checkbox"
+                         className="rounded border-brand-border text-brand-accent"
+                         checked={formData.bootcamps.includes(bc._id)}
+                         onChange={() => {
+                           setFormData(prev => {
+                             const has = prev.bootcamps.includes(bc._id);
+                             return { ...prev, bootcamps: has ? prev.bootcamps.filter(id => id !== bc._id) : [...prev.bootcamps, bc._id] };
+                           });
+                         }}
+                       />
+                       <span className="text-[10px] font-bold text-text-main uppercase">{bc.name || bc.title}</span>
+                     </label>
+                   ))}
+                </div>
+              </FormField>
+            </div>
+          </div>
+          
+          <div className="flex gap-3 pt-6 border-t border-brand-border mt-4">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" className="flex-1 shadow-lg shadow-brand-accent/20">
+              {editingUserId ? "Update Identity" : "Deploy Provisioning"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
