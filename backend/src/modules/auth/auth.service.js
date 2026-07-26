@@ -1,4 +1,5 @@
 import User from "../users/user.model.js";
+import { sanitizeUser, USER_POPULATE } from "../users/user.sanitize.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
@@ -6,27 +7,6 @@ import { sendEmail } from "../../utils/email.js";
 
 const ACCESS_TOKEN_EXPIRES = process.env.JWT_ACCESS_EXPIRES || "15m";
 const REFRESH_TOKEN_EXPIRES = process.env.JWT_REFRESH_EXPIRES || "7d";
-
-const sanitizeUser = (user) => {
-  // Ensure roles array is populated from legacy role field if necessary
-  let roles = Array.isArray(user.roles) ? user.roles : [];
-
-  if (user.role && roles.length === 0) {
-    const legacyRoles = Array.isArray(user.role) ? user.role : [user.role];
-    roles = legacyRoles.map((r) => String(r).toLowerCase());
-  }
-
-  // Convert roles to uppercase for frontend consistency
-  roles = roles.map((r) => String(r).toUpperCase());
-
-  return {
-    id: user._id.toString(),
-    name: user.name,
-    email: user.email,
-    roles: roles,
-    status: user.status,
-  };
-};
 
 const createToken = (payload, secret, expiresIn) => {
   if (!secret) {
@@ -233,7 +213,9 @@ export const loginUser = async (email, password) => {
     });
   }
 
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
+  const user = await User.findOne({
+    email: email.toLowerCase().trim(),
+  }).populate(USER_POPULATE);
   if (!user) {
     throw Object.assign(new Error("Invalid credentials."), { statusCode: 401 });
   }
@@ -302,7 +284,7 @@ export const refreshAuthToken = async (refreshToken) => {
 };
 
 export const currentUser = async (userId) => {
-  const user = await User.findById(userId);
+  const user = await User.findById(userId).populate(USER_POPULATE);
   if (!user) {
     throw Object.assign(new Error("User not found."), { statusCode: 404 });
   }

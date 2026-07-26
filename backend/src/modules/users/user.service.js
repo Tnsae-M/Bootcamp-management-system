@@ -1,5 +1,6 @@
 import User from './user.model.js';
 import bcrypt from 'bcrypt';
+import { sanitizeUser, USER_POPULATE } from './user.sanitize.js';
 
 export const createUser = async (userData) => {
   // Format bootcamps array if provided as raw IDs
@@ -16,36 +17,28 @@ export const createUser = async (userData) => {
   if (userData.password) {
     userData.password = await bcrypt.hash(userData.password, 10);
   }
-  
+
   const user = new User(userData);
   await user.save();
-  
-  // Return user without password
-  const userObject = user.toObject();
-  delete userObject.password;
-  return userObject;
+  await user.populate(USER_POPULATE);
+
+  return sanitizeUser(user);
 };
 
 export const getAllUsers = async (filter = {}) => {
-  // We exclude the password from the results for security
-  return await User.find(filter)
-    .select('-password')
-    .populate('divisionId', 'name')
-    .populate('bootcamps.bootcampId', 'name title');
+  const users = await User.find(filter).populate(USER_POPULATE);
+  return users.map(sanitizeUser);
 };
 
 export const getUserById = async (userId) => {
-  const user = await User.findById(userId)
-    .select('-password')
-    .populate('divisionId', 'name')
-    .populate('bootcamps.bootcampId', 'name title');
-    
+  const user = await User.findById(userId).populate(USER_POPULATE);
+
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
     throw error;
   }
-  return user;
+  return sanitizeUser(user);
 };
 
 export const updateUser = async (userId, updateData) => {
@@ -59,21 +52,18 @@ export const updateUser = async (userId, updateData) => {
     updateData.bootcamps = updateData.bootcamps.map(id => ({ bootcampId: id }));
   }
 
-  const user = await User.findByIdAndUpdate(userId, updateData, { 
+  const user = await User.findByIdAndUpdate(userId, updateData, {
     returnDocument: 'after', // Return the updated document
     runValidators: true // Ensure schema rules (like enums) are respected
-  })
-    .select('-password')
-    .populate('divisionId', 'name')
-    .populate('bootcamps.bootcampId', 'name title');
-  
+  }).populate(USER_POPULATE);
+
   if (!user) {
     const error = new Error('User not found');
     error.statusCode = 404;
     throw error;
   }
-  
-  return user;
+
+  return sanitizeUser(user);
 };
 
 export const deleteUser = async (userId) => {
@@ -85,5 +75,5 @@ export const deleteUser = async (userId) => {
     throw error;
   }
 
-  return user;
+  return sanitizeUser(user);
 };

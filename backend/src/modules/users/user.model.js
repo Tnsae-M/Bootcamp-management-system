@@ -76,26 +76,4 @@ emailVerificationExpires: {
   },
 );
 
-userSchema.pre('init', function(doc) {
-  if (doc.role) {
-    const legacyRoles = Array.isArray(doc.role) ? doc.role : [doc.role];
-    const rolesArray = Array.isArray(doc.roles) ? doc.roles : [];
-    
-    if (rolesArray.length === 0) {
-      doc.roles = legacyRoles.map(r => String(r).toUpperCase());
-    }
-  }
-});
-
-userSchema.pre('validate', function() {
-  if (this.role) {
-    const legacyRoles = Array.isArray(this.role) ? this.role : [this.role];
-    const rolesArray = Array.isArray(this.roles) ? this.roles : [];
-    
-    if (rolesArray.length === 0) {
-      this.roles = legacyRoles.map(r => String(r).toUpperCase());
-    }
-  }
-});
-
 export default mongoose.model("User", userSchema);
