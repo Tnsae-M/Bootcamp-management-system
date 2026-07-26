@@ -1,20 +1,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { progressService } from '../../services/progress.service';
 
+// Canonical Progress Report — exactly what the backend computes and returns
+// (backend/src/modules/progress/progress.service.js). All percentages 0-100,
+// rounded. overallProgress = attendance*0.3 + taskCompletion*0.4 + avgScore*0.3.
 export interface ProgressReport {
-  _id?: string;
-  id?: string;
-  studentId?: any;
-  bootcampId?: any;
-  overallScore?: number;
-  score?: number;
-  week?: number | string;
-  completedTasks?: number;
-  totalTasks?: number;
-  attendedSessions?: number;
-  totalSessions?: number;
-  status?: string;
-  remarks?: string;
+  attendanceRate: number;
+  taskCompletionRate: number;
+  avgScore: number;
+  overallProgress: number;
 }
 
 interface ProgressState {

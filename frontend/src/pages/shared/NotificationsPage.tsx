@@ -15,7 +15,7 @@ export default function NotificationsPage() {
     n.text.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleMarkAsRead = (id: number) => {
+  const handleMarkAsRead = (id: string | number) => {
     dispatch(markNotificationAsRead(id) as any);
   };
 

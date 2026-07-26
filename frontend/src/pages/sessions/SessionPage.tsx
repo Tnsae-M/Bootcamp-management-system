@@ -19,7 +19,7 @@ export default function SessionPage() {
   const { items: sessions, loading } = useSelector((state: RootState) => state.sessions);
   const { searchTerm } = useSelector((state: RootState) => state.ui);
   const { user, activeRole } = useSelector((state: RootState) => state.auth);
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const isStudent = userRoles.includes('STUDENT');
   const isAdminOrInstructor = userRoles.some(r => ['ADMIN', 'INSTRUCTOR'].includes(r));
 
@@ -91,7 +91,7 @@ export default function SessionPage() {
     setFormData({ 
       title: '', description: '', 
       bootcamp: bootcamps[0]?._id || '', 
-      instructor: isInstructorOnly ? (user?._id || user?.id) : (instructors[0]?._id || ''), 
+      instructor: isInstructorOnly ? (user?._id) : (instructors[0]?._id || ''), 
       date: new Date().toISOString().split('T')[0], 
       startTime: '10:00', durationH: 2, location: 'Virtual', status: 'UPCOMING' 
     });

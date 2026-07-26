@@ -72,7 +72,7 @@ export default function AdminDashboard() {
     dispatch(fetchBootcamps());
   }, [dispatch]);
 
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const usersList = Array.isArray(users) ? users : [];
   const instructorsList = usersList.filter((u: any) => u.roles?.includes('INSTRUCTOR') || u.role === 'INSTRUCTOR');
   
@@ -114,20 +114,20 @@ export default function AdminDashboard() {
     if (activeTab === 'users') {
       const studentMap: Record<string, number> = {};
       bcArr.forEach(b => {
-        const name = b.name || b.title || "Unnamed";
+        const name = b.name || "Unnamed";
         studentMap[name] = 0;
       });
 
       usersList.forEach((u: any) => {
-        const isStudent = (u.roles || [u.role] || []).some((r: any) => String(r).toUpperCase() === 'STUDENT');
+        const isStudent = (u.roles || []).some((r: any) => String(r).toUpperCase() === 'STUDENT');
         if (!isStudent) return;
 
         if (u.bootcamps && Array.isArray(u.bootcamps)) {
           u.bootcamps.forEach((en: any) => {
             const bId = en.bootcampId?._id || en.bootcampId;
-            const bootcamp = bcArr.find(b => (b._id || b.id) === bId);
+            const bootcamp = bcArr.find(b => b._id === bId);
             if (bootcamp) {
-              const name = bootcamp.name || bootcamp.title || "Unnamed";
+              const name = bootcamp.name || "Unnamed";
               studentMap[name]++;
             }
           });

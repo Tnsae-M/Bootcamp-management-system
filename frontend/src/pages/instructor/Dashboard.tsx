@@ -48,7 +48,7 @@ export default function InstructorDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const uId = user?._id || user?.id;
+      const uId = user?._id;
       const [sessRes, bcRes, usersRes, feedbackRes] = await Promise.all([
         sessionsService.getSessions(),
         bootcampsService.getBootcamps(),
@@ -103,7 +103,7 @@ export default function InstructorDashboard() {
     e.preventDefault();
     try {
       // Force current instructor ID
-      const payload = { ...form, instructor: user?.id || user?._id };
+      const payload = { ...form, instructor: user?._id };
       await sessionsService.createSession(payload);
       toast.success("Session scheduled successfully");
       setShowCreate(false);

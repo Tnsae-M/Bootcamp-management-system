@@ -69,7 +69,7 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode, role?: 
   if (!isAuthenticated) return <Navigate to="/login" />;
 
   if (role) {
-    const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+    const userRoles: string[] = user?.roles || [];
     const targetRole = role.toUpperCase();
     
     const hasRole =
@@ -93,7 +93,7 @@ const RoleBasedHome = () => {
     );
   }
 
-  const roles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const roles = (user?.roles || []);
 
   if (roles.includes('SUPER ADMIN') || roles.includes('ADMIN'))
     return <Navigate to="/dashboard/admin/dashboard" replace />;

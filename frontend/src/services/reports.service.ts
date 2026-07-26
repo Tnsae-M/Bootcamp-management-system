@@ -32,4 +32,4 @@ export const deleteReport = async (id: string) => {
   return res.data;
 };
 
-export default { getReports, createReport, getReport, updateReport, deleteReport };
+export default { getReports, createReport, getReport, updateReport, deleteReport, getAnalytics };

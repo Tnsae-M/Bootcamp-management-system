@@ -31,7 +31,7 @@ export default function DivisionsPage() {
   const { searchTerm } = useSelector((state: RootState) => state.ui);
   const { user } = useSelector((state: RootState) => state.auth);
   
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const isSuperAdmin = userRoles.includes('SUPER ADMIN');
   const isAdmin = userRoles.includes('ADMIN');
   const rolePath = userRoles.includes('INSTRUCTOR') ? 'instructor' : (userRoles.includes('ADMIN') ? 'admin' : 'student');

@@ -1,8 +1,6 @@
 node_modules/
 dist/
 build/
-.cursor/
-.claude/
 *.log
 .DS_Store
 
@@ -13,17 +11,22 @@ build/
 *.env*
 .env for BMS.txt
 
-# Ignore backend seed scripts
-/backend/seed*.js
-/backend/*seed*.js
+# AI agent configs and session state
+.cursor/
+.claude/
+.opencode/
+.agents/
+session.json
+HANDOFF-*.md
 
-# Ignore scratch seed scripts
-/scratch/seed*.js
-/scratch/*seed*.js
-
+# AI-generated planning / scratch files
 tasks.md
 plan.md
 implementation_plan.md
-csec-astu-color-system.md
-HANDOFF-2026-07-25.md
 ACTIONPLAN.md
+csec-astu-color-system.md
+scratch/
+
+# Backend seed scripts
+/backend/seed*.js
+/backend/*seed*.js

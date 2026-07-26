@@ -1,14 +1,14 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { bootcampsService } from '../../services/bootcamps.service';
 
+// Mirrors backend bootcamp.model.js — divisionId may arrive populated
 export interface Bootcamp {
   _id: string;
-  id?: string;
   name: string;
-  description?: string;
-  division: string | any;
+  divisionId: string | { _id: string; name?: string };
+  startDate: string;
+  endDate: string;
   status: string;
-  createdAt: string;
 }
 
 interface BootcampsState {

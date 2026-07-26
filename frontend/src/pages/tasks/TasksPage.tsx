@@ -79,7 +79,7 @@ export default function TasksPage({ sessionId, bootcampId }: TasksPageProps) {
 
 
 
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const isInstructorOnly = userRoles.includes('INSTRUCTOR') && !userRoles.includes('ADMIN') && !userRoles.includes('SUPER ADMIN');
 
   const filteredTasks = tasks.filter((t) => {
@@ -147,7 +147,7 @@ export default function TasksPage({ sessionId, bootcampId }: TasksPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const payload = { ...formData, createdBy: user?.id };
+    const payload = { ...formData, createdBy: user?._id };
     if (!payload.sessionId) {
       delete payload.sessionId;
     }

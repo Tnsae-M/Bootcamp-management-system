@@ -79,10 +79,10 @@ export default function UsersPage() {
     }
   }, [location, currentUser]);
 
-  const filteredUsers = (users || []).filter((u) => 
+  const filteredUsers = (users || []).filter((u) =>
     (u.name || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
     (u.email || '').toLowerCase().includes((searchTerm || '').toLowerCase()) ||
-    (u.roles || [u.role || '']).some(ro => String(ro).toLowerCase().includes((searchTerm || '').toLowerCase()))
+    (u.roles || []).some(ro => String(ro).toLowerCase().includes((searchTerm || '').toLowerCase()))
   );
 
   const handleOpenCreate = (forcedRole?: string) => {
@@ -95,12 +95,12 @@ export default function UsersPage() {
 
   const handleOpenEdit = (user: any) => {
     setEditingUserId(user._id);
-    setFormData({ 
-      name: user.name, 
-      email: user.email, 
-      password: '', 
-      roles: user.roles?.map((r: any) => String(r).toUpperCase()) || (user.role ? [String(user.role).toUpperCase()] : ['STUDENT']),
-      division: user.divisionId || user.division || '',
+    setFormData({
+      name: user.name,
+      email: user.email,
+      password: '',
+      roles: user.roles?.map((r: any) => String(r).toUpperCase()) || ['STUDENT'],
+      division: user.divisionId?._id || '',
       bootcamps: (user.bootcamps || []).map((bc: any) => bc.bootcampId?._id || bc.bootcampId || bc),
       status: user.status || 'active'
     });
@@ -228,7 +228,7 @@ export default function UsersPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
-                        {(u.roles && u.roles.length > 0 ? u.roles : [u.role || 'student']).map((r: string) => (
+                        {(u.roles.length > 0 ? u.roles : ['STUDENT']).map((r: string) => (
                           <React.Fragment key={r}>{getRoleBadge(r)}</React.Fragment>
                         ))}
                       </div>
@@ -236,34 +236,18 @@ export default function UsersPage() {
                     <TableCell>
                       <span className="text-xs font-semibold text-text-muted uppercase tracking-tight">
                         {(() => {
-                          // First try direct division assignment
+                          // Direct division assignment (canonical populated ref)
                           if (u.divisionId?.name) return u.divisionId.name;
-                          if (u.division) return u.division;
-                          
-                          // Derive division from bootcamp enrollments
-                          if (u.bootcamps && u.bootcamps.length > 0) {
-                            const userBootcamps = Array.isArray(u.bootcamps) ? u.bootcamps : [];
-                            const firstBootcamp = userBootcamps[0];
-                            
-                            // Check if bootcamp has division info
-                            if (firstBootcamp?.bootcampId?.divisionId?.name) {
-                              return firstBootcamp.bootcampId.divisionId.name;
-                            }
-                            if (firstBootcamp?.divisionId?.name) {
-                              return firstBootcamp.divisionId.name;
-                            }
-                            
-                            // Find division from bootcamps list
-                            const bootcampId = firstBootcamp.bootcampId?._id || firstBootcamp.bootcampId || firstBootcamp;
-                            const bootcamp = bootcampsList.find(bc => (bc._id || bc.id) === bootcampId);
+
+                          // Derive division from the first bootcamp enrollment
+                          const firstBootcampId = u.bootcamps[0]?.bootcampId?._id;
+                          if (firstBootcampId) {
+                            const bootcamp = bootcampsList.find(bc => bc._id === firstBootcampId);
                             if (bootcamp?.divisionId?.name) {
                               return bootcamp.divisionId.name;
                             }
-                            if (bootcamp?.division) {
-                              return bootcamp.division;
-                            }
                           }
-                          
+
                           return 'Unassigned';
                         })()}
                       </span>

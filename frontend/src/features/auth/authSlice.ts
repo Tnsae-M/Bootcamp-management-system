@@ -1,17 +1,8 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { authService } from '../../services/auth.service';
+import type { User, UserRole } from '../../types/user';
 
-export type UserRole = 'SUPER ADMIN' | 'ADMIN' | 'INSTRUCTOR' | 'STUDENT';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  roles: string[];
-  role?: string; 
-  division?: string;
-  groupId?: string;
-}
+export type { User, UserRole };
 
 interface AuthState {
   user: User | null;
@@ -34,8 +25,13 @@ const initialState: AuthState = {
   loading: false,
   error: null,
   activeRole: activeRole,
-  isInitializing: !!token, 
+  isInitializing: !!token,
 };
+
+// Pick the highest-priority role the user holds: SUPER ADMIN > ADMIN > INSTRUCTOR > STUDENT
+const ROLE_PRIORITY: UserRole[] = ['SUPER ADMIN', 'ADMIN', 'INSTRUCTOR', 'STUDENT'];
+const highestRole = (roles: UserRole[]): string | null =>
+  ROLE_PRIORITY.find((r) => roles.includes(r)) ?? roles[0] ?? null;
 
 // ===== THUNKS =====
 
@@ -107,47 +103,18 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        // Backend returns: { success, message, data: { accessToken, refreshToken, user } }
-        // authService returns response.data, thunk returns response.data (the inner data object)
-        // So action.payload = { accessToken, refreshToken, user }
-        const rawPayload = action.payload;
-        const token = rawPayload.accessToken || rawPayload.token;
-        const user = rawPayload.user;
-        
+        // action.payload = { accessToken, refreshToken, user } — user is the canonical sanitized shape
+        const token = action.payload.accessToken;
+        const user: User | undefined = action.payload.user;
+
         if (token && user) {
           state.isAuthenticated = true;
           state.user = user;
           state.token = token;
           localStorage.setItem('token', token);
-          
-          // Backend sanitizeUser returns roles array, ensure it's properly formatted
-          if (state.user && state.user.roles) {
-            // Ensure roles are uppercase strings
-            state.user.roles = state.user.roles.map((r: any) => String(r).toUpperCase());
-          } else if (state.user && !state.user.roles) {
-            // Fallback for legacy data
-            const legacyRole = state.user.role;
-            const rolesArr = Array.isArray(legacyRole) ? legacyRole : [legacyRole || 'STUDENT'];
-            state.user.roles = rolesArr.map(r => String(r).toUpperCase());
-          }
-          
-          // Set active role with priority: SUPER ADMIN > ADMIN > INSTRUCTOR > STUDENT
-          if (!state.activeRole && state.user?.roles?.length > 0) {
-            const rolePriority = ['SUPER ADMIN', 'ADMIN', 'INSTRUCTOR', 'STUDENT'];
-            const userRoles = state.user.roles;
-            
-            // Find the highest priority role the user has
-            for (const priorityRole of rolePriority) {
-              if (userRoles.includes(priorityRole)) {
-                state.activeRole = priorityRole;
-                break;
-              }
-            }
-            
-            // Fallback to first role if somehow no priority match
-            if (!state.activeRole) {
-              state.activeRole = state.user.roles[0].toUpperCase();
-            }
+
+          if (!state.activeRole) {
+            state.activeRole = highestRole(user.roles);
           }
         } else {
           state.isAuthenticated = false;
@@ -166,45 +133,20 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.loading = false;
         // register may not return a token (email verification required)
-        const rawPayload = action.payload;
-        const token = rawPayload.accessToken || rawPayload.token;
-        const user = rawPayload.user;
-        
+        const token = action.payload.accessToken;
+        const user: User | undefined = action.payload.user;
+
         if (token && user) {
           state.isAuthenticated = true;
           state.user = user;
           state.token = token;
           localStorage.setItem('token', token);
-          if (state.user && state.user.roles) {
-            // Ensure roles are uppercase strings
-            state.user.roles = state.user.roles.map((r: any) => String(r).toUpperCase());
-          } else if (state.user && !state.user.roles) {
-            // Fallback for legacy data
-            const legacyRole = state.user.role;
-            const rolesArr = Array.isArray(legacyRole) ? legacyRole : [legacyRole || 'STUDENT'];
-            state.user.roles = rolesArr.map(r => String(r).toUpperCase());
-          }
-          // Set active role with priority: SUPER ADMIN > ADMIN > INSTRUCTOR > STUDENT
-          if (!state.activeRole && state.user?.roles?.length > 0) {
-            const rolePriority = ['SUPER ADMIN', 'ADMIN', 'INSTRUCTOR', 'STUDENT'];
-            const userRoles = state.user.roles;
-            
-            // Find the highest priority role the user has
-            for (const priorityRole of rolePriority) {
-              if (userRoles.includes(priorityRole)) {
-                state.activeRole = priorityRole;
-                break;
-              }
-            }
-            
-            // Fallback to first role if somehow no priority match
-            if (!state.activeRole) {
-              state.activeRole = state.user.roles[0].toUpperCase();
-            }
+
+          if (!state.activeRole) {
+            state.activeRole = highestRole(user.roles);
           }
         }
       })
-
       .addCase(register.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -217,40 +159,14 @@ const authSlice = createSlice({
         state.loading = false;
         state.isInitializing = false;
         // Backend /auth/me returns { message, data: sanitizedUser }
-        // authService returns response.data, thunk returns response.data
-        // So action.payload = { message, data: { id, name, email, role, status } }
-        const rawPayload = action.payload;
-        const user = rawPayload.data || rawPayload;
-        
-        if (user && user.id) {
-          if (user.roles) {
-            // Ensure roles are uppercase strings
-            user.roles = user.roles.map((r: any) => String(r).toUpperCase());
-          } else if (!user.roles) {
-            // Fallback for legacy data
-            const legacyRole = user.role;
-            const rolesArr = Array.isArray(legacyRole) ? legacyRole : [legacyRole || 'STUDENT'];
-            user.roles = rolesArr.map((r: any) => String(r).toUpperCase());
-          }
+        const user: User | undefined = action.payload.data || action.payload;
+
+        if (user && user._id) {
           state.user = user;
           state.isAuthenticated = true;
-          // Set active role with priority: SUPER ADMIN > ADMIN > INSTRUCTOR > STUDENT
-          if (!state.activeRole && user.roles.length > 0) {
-            const rolePriority = ['SUPER ADMIN', 'ADMIN', 'INSTRUCTOR', 'STUDENT'];
-            const userRoles = user.roles;
-            
-            // Find the highest priority role the user has
-            for (const priorityRole of rolePriority) {
-              if (userRoles.includes(priorityRole)) {
-                state.activeRole = priorityRole;
-                break;
-              }
-            }
-            
-            // Fallback to first role if somehow no priority match
-            if (!state.activeRole) {
-              state.activeRole = user.roles[0].toUpperCase();
-            }
+
+          if (!state.activeRole) {
+            state.activeRole = highestRole(user.roles);
           }
         } else {
           state.isInitializing = false;
@@ -269,4 +185,3 @@ const authSlice = createSlice({
 
 export const { logout, setActiveRole, clearError } = authSlice.actions;
 export default authSlice.reducer;
-

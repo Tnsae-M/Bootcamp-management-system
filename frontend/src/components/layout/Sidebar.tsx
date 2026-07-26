@@ -40,7 +40,7 @@ export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
-  const userRolesList = user?.roles || (user?.role ? [user.role] : ["STUDENT"]);
+  const userRolesList = user?.roles || ["STUDENT"];
   const currentRole = (activeRole || userRolesList[0] || "STUDENT").toUpperCase();
   const primaryRolePath = currentRole.toLowerCase().replace(' ', '');
   

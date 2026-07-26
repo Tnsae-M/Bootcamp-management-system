@@ -26,7 +26,7 @@ export default function SessionDetailPage() {
     if (queryParams.get('openFeedback')) setModalOpen(true);
   }, [location.search]);
 
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const currentRole = (activeRole || userRoles[0] || 'STUDENT').toUpperCase();
   const isFaculty = ['ADMIN', 'SUPER ADMIN', 'INSTRUCTOR'].includes(currentRole);
 

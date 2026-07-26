@@ -1,5 +1,4 @@
-import { test } from "node:test";
-import assert from "node:assert/strict";
+import { describe, test, expect } from "vitest";
 import jwt from "jsonwebtoken";
 
 process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret-for-guard";
@@ -15,32 +14,33 @@ const requestWithToken = (payload) => ({
 const runGuard = (guard, req) =>
   new Promise((resolve) => guard(req, {}, (err) => resolve(err)));
 
-test("allows a user whose roles include an allowed role", async () => {
-  const req = requestWithToken({ userId: "u1", roles: ["ADMIN"] });
-  const err = await runGuard(roleGuard(["ADMIN", "SUPER ADMIN"]), req);
-  assert.equal(err, undefined);
-});
+describe("roleGuard", () => {
+  test("allows a user whose roles include an allowed role", async () => {
+    const req = requestWithToken({ userId: "u1", roles: ["ADMIN"] });
+    const err = await runGuard(roleGuard(["ADMIN", "SUPER ADMIN"]), req);
+    expect(err).toBeUndefined();
+  });
 
-test("rejects a user with only insufficient roles (403)", async () => {
-  const req = requestWithToken({ userId: "u2", roles: ["STUDENT"] });
-  const err = await runGuard(roleGuard(["ADMIN"]), req);
-  assert.equal(err.status, 403);
-});
+  test("rejects a user with only insufficient roles (403)", async () => {
+    const req = requestWithToken({ userId: "u2", roles: ["STUDENT"] });
+    const err = await runGuard(roleGuard(["ADMIN"]), req);
+    expect(err.status).toBe(403);
+  });
 
-test("rejects a token carrying no roles array (401) — legacy `role` payloads are dead", async () => {
-  // Pre-fix tokens carried a singular `role`; the guard no longer honors it.
-  const req = requestWithToken({ userId: "u3", role: "ADMIN" });
-  const err = await runGuard(roleGuard(["ADMIN"]), req);
-  assert.equal(err.status, 401);
-});
+  test("rejects a token carrying no roles array (401) — legacy `role` payloads are dead", async () => {
+    const req = requestWithToken({ userId: "u3", role: "ADMIN" });
+    const err = await runGuard(roleGuard(["ADMIN"]), req);
+    expect(err.status).toBe(401);
+  });
 
-test("rejects a missing token (401)", async () => {
-  const err = await runGuard(roleGuard(["ADMIN"]), { headers: {} });
-  assert.equal(err.status, 401);
-});
+  test("rejects a missing token (401)", async () => {
+    const err = await runGuard(roleGuard(["ADMIN"]), { headers: {} });
+    expect(err.status).toBe(401);
+  });
 
-test("role match is case-insensitive at the guard boundary", async () => {
-  const req = requestWithToken({ userId: "u4", roles: ["admin"] });
-  const err = await runGuard(roleGuard(["ADMIN"]), req);
-  assert.equal(err, undefined);
+  test("role match is case-insensitive at the guard boundary", async () => {
+    const req = requestWithToken({ userId: "u4", roles: ["admin"] });
+    const err = await runGuard(roleGuard(["ADMIN"]), req);
+    expect(err).toBeUndefined();
+  });
 });

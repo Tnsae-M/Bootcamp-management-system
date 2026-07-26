@@ -32,7 +32,7 @@ export default function AttendancePage({
   const attendanceLoading: boolean = attendanceState.loading;
 
   const { activeRole } = useSelector((state: RootState) => state.auth);
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const currentRole = activeRole || userRoles[0] || "STUDENT";
   const canMark = currentRole === "INSTRUCTOR";
   const isFaculty = ["INSTRUCTOR", "ADMIN", "SUPER ADMIN"].includes(currentRole);

@@ -76,7 +76,7 @@ export default function ProfilePage() {
           
           <h2 className="text-xl font-black text-text-main uppercase tracking-tight">{user?.name}</h2>
           <Badge className="mt-2 bg-brand-primary text-brand-accent border-brand-accent/20 uppercase tracking-widest text-[9px] px-3 py-1">
-            {activeRole || (user?.roles?.[0] || user?.role || 'STUDENT').toUpperCase()}
+            {activeRole || user?.roles?.[0] || 'STUDENT'}
           </Badge>
 
           <div className="mt-8 space-y-4 text-left">

@@ -39,7 +39,7 @@ export default function ResourcesPage({ sessionId }: ResourcesPageProps) {
   useEffect(() => { fetchResources(); }, [sessionId]);
 
   const roles = (user?.roles || []).map((r: string) => String(r).toUpperCase());
-  const canUpload = roles.includes('INSTRUCTOR') || String(user?.role || '').toUpperCase() === 'INSTRUCTOR';
+  const canUpload = roles.includes('INSTRUCTOR');
   const [success, setSuccess] = useState('');
 
   const filteredResources = resources.filter((r) => 
@@ -110,7 +110,7 @@ export default function ResourcesPage({ sessionId }: ResourcesPageProps) {
               </button>
             </div>
           )}
-          {(!isAuthenticated || user?.role !== 'INSTRUCTOR') && (
+          {(!isAuthenticated || !canUpload) && (
             <div className="text-[11px] text-text-muted mt-2 text-right">
               {!isAuthenticated ? (
                 <span className="font-bold uppercase">Login to download. </span>
@@ -148,7 +148,7 @@ export default function ResourcesPage({ sessionId }: ResourcesPageProps) {
                </div>
                
                <div className="flex items-center gap-2">
-                  {isAuthenticated && (user?.roles || [user?.role]).some(r => ['INSTRUCTOR','STUDENT','ADMIN','SUPER ADMIN'].includes(String(r).toUpperCase())) ? (
+                  {isAuthenticated && (user?.roles || []).some(r => ['INSTRUCTOR','STUDENT','ADMIN','SUPER ADMIN'].includes(String(r).toUpperCase())) ? (
                     <button onClick={() => handleDownload(r)} className="p-3 rounded-lg bg-brand-primary border border-brand-border text-brand-accent hover:bg-brand-accent hover:text-white transition-all shadow-sm flex items-center gap-2">
                       <Download size={18} /> <span className="text-[12px] font-bold">Download</span>
                     </button>

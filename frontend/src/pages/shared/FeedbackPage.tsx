@@ -38,13 +38,13 @@ export default function FeedbackPage({ sessionId: propSessionId }: FeedbackPageP
       dispatch(fetchSessionFeedback(propSessionId));
     } else if (viewType === 'bootcamp' && selectedBootcamp) {
       dispatch(fetchBootcampFeedback(selectedBootcamp));
-    } else if (viewType === 'instructor' && user?.id) {
-      dispatch(fetchInstructorFeedback(user.id));
+    } else if (viewType === 'instructor' && user?._id) {
+      dispatch(fetchInstructorFeedback(user._id));
     }
-  }, [propSessionId, viewType, selectedBootcamp, user?.id, dispatch]);
+  }, [propSessionId, viewType, selectedBootcamp, user?._id, dispatch]);
 
   const { activeRole } = useSelector((state: RootState) => state.auth);
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const currentRole = (activeRole || userRoles[0] || 'STUDENT').toUpperCase();
   const isFaculty = ['ADMIN', 'SUPER ADMIN', 'INSTRUCTOR'].includes(currentRole);
 

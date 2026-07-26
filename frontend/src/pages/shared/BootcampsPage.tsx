@@ -74,7 +74,7 @@ export default function BootcampsPage() {
       const instructorIds = bootcamp.instructors.map((inst: any) => 
         typeof inst === 'object' ? inst._id || inst.id : inst
       );
-      if (instructorIds.includes(user.id)) return true;
+      if (instructorIds.includes(user._id)) return true;
     }
     
     // Check if user is enrolled in this bootcamp
@@ -88,11 +88,8 @@ export default function BootcampsPage() {
     return false;
   };
 
-  const filteredBootcamps = (bootcamps || []).filter(
-    (b) =>
-      (b.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
-      (b.description &&
-        b.description.toLowerCase().includes((searchTerm || "").toLowerCase())),
+  const filteredBootcamps = (bootcamps || []).filter((b) =>
+    (b.name || "").toLowerCase().includes((searchTerm || "").toLowerCase()),
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,7 +157,7 @@ export default function BootcampsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredBootcamps.map((bootcamp) => {
-            const bId = bootcamp._id || bootcamp.id;
+            const bId = bootcamp._id;
             return (
               <Card
                 key={bId}
@@ -182,8 +179,7 @@ export default function BootcampsPage() {
                   </h3>
 
                   <p className="text-sm text-text-muted line-clamp-2 mb-6">
-                    {bootcamp.description ||
-                      "Comprehensive training track focused on high-level technical mastery and collaboration."}
+                    Comprehensive training track focused on high-level technical mastery and collaboration.
                   </p>
 
                   <div className="mt-auto pt-4 border-t border-brand-border flex items-center justify-between">

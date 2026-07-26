@@ -36,7 +36,7 @@ export default function BootcampDetailPage() {
     (state: RootState) => state.sessions,
   );
   const { user } = useSelector((state: RootState) => state.auth);
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const isStudent = userRoles.includes("STUDENT");
   const canManage = userRoles.some(r => ["ADMIN", "INSTRUCTOR"].includes(r));
 

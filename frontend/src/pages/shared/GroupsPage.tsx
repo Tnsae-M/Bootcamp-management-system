@@ -32,7 +32,7 @@ export default function GroupsPage() {
   const [activeGroupId, setActiveGroupId] = useState('');
   const [newMemberId, setNewMemberId] = useState('');
 
-  const userRoles = (user?.roles || (user?.role ? [user.role] : [])).map(r => r.toUpperCase());
+  const userRoles = (user?.roles || []);
   const isAdminOrInst = userRoles.some((r: string) => ['ADMIN', 'INSTRUCTOR'].includes(r));
 
   useEffect(() => {

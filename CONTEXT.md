@@ -28,3 +28,7 @@ _Avoid_: score (ambiguous — say `avgScore` or `overallProgress`)
 
 **Sanitized User**:
 The only User representation allowed to cross the API boundary — produced by the shared allowlist sanitizer in the users module. Secrets (`password`, `refreshToken`, reset/verification tokens) are structurally absent, not just hidden.
+
+## Session workflow
+
+Every working session ends with `/handoff` (project skill, `.claude/skills/handoff/`): it writes `HANDOFF-<date>.md` at the repo root with verified progress and next actions, syncs this glossary if terms changed, and updates memory. Session state lives in the HANDOFF file — never in this glossary.

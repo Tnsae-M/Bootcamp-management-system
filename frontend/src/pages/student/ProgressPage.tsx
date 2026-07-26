@@ -25,7 +25,13 @@ export default function ProgressPage() {
     }
   }, [myEnrollments, dispatch]);
 
-  const stats = reports[0] || {};
+  // Canonical Progress Report shape — zeros until the backend responds
+  const stats = reports[0] ?? {
+    attendanceRate: 0,
+    taskCompletionRate: 0,
+    avgScore: 0,
+    overallProgress: 0,
+  };
   const meanScore = stats.avgScore || 0;
   const milestones = `${stats.taskCompletionRate > 0 ? Math.round((stats.taskCompletionRate / 100) * 12) : 0} / 12`;
   const engagement = stats.attendanceRate > 80 ? 'High' : stats.attendanceRate > 50 ? 'Medium' : 'Low';
