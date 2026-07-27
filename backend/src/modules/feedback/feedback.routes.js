@@ -23,7 +23,7 @@ router.post(
 router.get(
   "/bootcamp/:id",
   authGuard,
-  roleGuard(["admin", "instructor", "super admin"]),
+  roleGuard(["ADMIN", "INSTRUCTOR"]),
   getBootcampFeedback
 );
 
@@ -31,7 +31,7 @@ router.get(
 router.get(
   "/instructor/:id",
   authGuard,
-  roleGuard(["admin", "instructor", "super admin"]),
+  roleGuard(["ADMIN", "INSTRUCTOR"]),
   getInstructorFeedback
 );
 
@@ -39,7 +39,7 @@ router.get(
 router.get(
   "/session/:id",
   authGuard,
-  roleGuard(["admin", "instructor", "super admin"]),
+  roleGuard(["ADMIN", "INSTRUCTOR"]),
   getSessionFeedback
 );
 

@@ -4,6 +4,6 @@ import { authGuard, roleGuard } from '../../middleware/role.guard.js';
 
 const router = express.Router();
 
-router.get('/', authGuard, roleGuard(['ADMIN', 'SUPER ADMIN']), activityController.getActivities);
+router.get('/', authGuard, roleGuard(["ADMIN"]), activityController.getActivities);
 
 export default router;

@@ -12,14 +12,14 @@ const router = express.Router();
 router
   .route('/')
   // Allow both admin and super admin to create users
-  .post(authGuard, roleGuard(['admin', 'super admin']), userController.createUser)
+  .post(authGuard, roleGuard(["ADMIN"]), userController.createUser)
   .get(authGuard, userController.getAllUsers);
 
 router
   .route('/:id')
   .get(authGuard, userController.getUserById)
   // Allow both admin and super admin to update users
-  .put(authGuard, roleGuard(['admin', 'super admin']), userController.updateUser);
+  .put(authGuard, roleGuard(["ADMIN"]), userController.updateUser);
 
 
   export default router;

@@ -35,6 +35,6 @@ router.post("/reset-password/:token", resetPasswordController);
 router.put("/change-password", authGuard, changePasswordController);
 
 // Admin-Mediated Reset
-router.put("/admin/reset-password/:userId", authGuard, roleGuard(['ADMIN', 'SUPER ADMIN']), adminResetPasswordController);
+router.put("/admin/reset-password/:userId", authGuard, roleGuard(["ADMIN"]), adminResetPasswordController);
 
 export default router;

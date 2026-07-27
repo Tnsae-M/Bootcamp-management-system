@@ -14,13 +14,13 @@ router.get("/:id", authGuard, getBootcampById);
 router.put(
   "/:id",
   authGuard,
-  roleGuard(["ADMIN", "SUPER ADMIN"]),
+  roleGuard(["ADMIN"]),
   updateBootcamp,
 );
 router.delete(
   "/:id",
   authGuard,
-  roleGuard(["ADMIN", "SUPER ADMIN"]),
+  roleGuard(["ADMIN"]),
   deleteBootcamp,
 );
 

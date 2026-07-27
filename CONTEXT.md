@@ -9,7 +9,7 @@ A person with an account, identified by `_id`, holding one or more Roles. The ca
 _Avoid_: account, member
 
 **Role**:
-One of `SUPER ADMIN`, `ADMIN`, `INSTRUCTOR`, `STUDENT` — always uppercase, always carried as an array (`roles`). A User can hold several at once.
+One of `SUPER ADMIN`, `ADMIN`, `INSTRUCTOR`, `STUDENT` — always uppercase, always carried as an array (`roles`). A User can hold several at once. `SUPER ADMIN` can do everything `ADMIN` can (see ADR-0002); no other Role implies another — in particular, `ADMIN` does not imply `INSTRUCTOR`.
 _Avoid_: `role` (singular field — deleted legacy), lowercase variants
 
 **Active Role**:

@@ -43,4 +43,29 @@ describe("roleGuard", () => {
     const err = await runGuard(roleGuard(["ADMIN"]), req);
     expect(err).toBeUndefined();
   });
+
+  // Role hierarchy (ADR-0002): SUPER ADMIN ⊇ ADMIN, and that is the only edge.
+  test("SUPER ADMIN passes a guard that only lists ADMIN", async () => {
+    const req = requestWithToken({ userId: "u5", roles: ["SUPER ADMIN"] });
+    const err = await runGuard(roleGuard(["ADMIN"]), req);
+    expect(err).toBeUndefined();
+  });
+
+  test("ADMIN does not pass a guard that lists only SUPER ADMIN (403)", async () => {
+    const req = requestWithToken({ userId: "u6", roles: ["ADMIN"] });
+    const err = await runGuard(roleGuard(["SUPER ADMIN"]), req);
+    expect(err.status).toBe(403);
+  });
+
+  test("ADMIN does not imply INSTRUCTOR (403)", async () => {
+    const req = requestWithToken({ userId: "u7", roles: ["ADMIN"] });
+    const err = await runGuard(roleGuard(["INSTRUCTOR"]), req);
+    expect(err.status).toBe(403);
+  });
+
+  test("SUPER ADMIN does not imply INSTRUCTOR (403)", async () => {
+    const req = requestWithToken({ userId: "u8", roles: ["SUPER ADMIN"] });
+    const err = await runGuard(roleGuard(["INSTRUCTOR"]), req);
+    expect(err.status).toBe(403);
+  });
 });

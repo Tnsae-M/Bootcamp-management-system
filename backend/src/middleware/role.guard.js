@@ -1,11 +1,27 @@
 import jwt from "jsonwebtoken";
 
+// Role hierarchy (ADR-0002). Holding a role grants every role it implies,
+// so routes list only the minimum role they require. The single edge:
+// SUPER ADMIN can do everything ADMIN can. ADMIN does NOT imply INSTRUCTOR.
+const ROLE_IMPLIES = {
+  "SUPER ADMIN": ["ADMIN"],
+};
+
+const expandRoles = (roles) => {
+  const expanded = new Set(roles);
+  for (const role of roles) {
+    for (const implied of ROLE_IMPLIES[role] || []) {
+      expanded.add(implied);
+    }
+  }
+  return expanded;
+};
+
 export const roleGuard = (allowedRoles) => {
   return (req, res, next) => {
     try {
       // Get token from Authorization header
       const authHeader = req.headers.authorization;
-      let userRole;
 
       if (authHeader && authHeader.startsWith("Bearer ")) {
         const token = authHeader.substring(7);
@@ -35,7 +51,8 @@ export const roleGuard = (allowedRoles) => {
         .filter(r => r) // Remove undefined/null
         .map(r => String(r).toUpperCase());
 
-      const hasPermission = rolesArray.some(role => userRoles.includes(role));
+      const effectiveRoles = expandRoles(userRoles);
+      const hasPermission = rolesArray.some(role => effectiveRoles.has(role));
 
       if (!hasPermission) {
         const error = new Error(
