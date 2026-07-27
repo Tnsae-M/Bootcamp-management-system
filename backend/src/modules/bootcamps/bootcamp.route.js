@@ -11,7 +11,17 @@ const router = Router();
 
 router.get("/", authGuard, getBootcamps);
 router.get("/:id", authGuard, getBootcampById);
-router.put("/:id", authGuard, roleGuard(["admin"]), updateBootcamp);
-router.delete("/:id", authGuard, roleGuard("admin"), deleteBootcamp);
+router.put(
+  "/:id",
+  authGuard,
+  roleGuard(["ADMIN", "SUPER ADMIN"]),
+  updateBootcamp,
+);
+router.delete(
+  "/:id",
+  authGuard,
+  roleGuard(["ADMIN", "SUPER ADMIN"]),
+  deleteBootcamp,
+);
 
 export default router;
