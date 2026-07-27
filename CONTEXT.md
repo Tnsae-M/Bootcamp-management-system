@@ -13,7 +13,7 @@ One of `SUPER ADMIN`, `ADMIN`, `INSTRUCTOR`, `STUDENT` — always uppercase, alw
 _Avoid_: `role` (singular field — deleted legacy), lowercase variants
 
 **Active Role**:
-The single Role a logged-in User is currently acting as, chosen client-side from their `roles`. Determines which dashboard and guards apply.
+The single Role a logged-in User is currently acting as, chosen client-side from their `roles`. Determines which dashboard the User sees — presentation only. It never restricts backend permissions: the backend authorizes against the full `roles` set (see ADR-0003). The original intent — a User who is an ADMIN in one Division and a STUDENT in another, switching hats — is not modeled in v1; Roles are global, not scoped to a Division. Division-scoped roles and an enforced Active Role are deferred to v2.
 
 **Division**:
 An organizational unit of the club that Users belong to. Users reference it via `divisionId`; on the wire it travels populated (`{_id, name}`).
