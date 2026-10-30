@@ -38,33 +38,16 @@ const validateEmail = (email) => {
 };
 
 const validatePassword = (password) => {
-  const errors = [];
-
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long");
-  }
-
-  if (password.length > 128) {
-    errors.push("Password must not exceed 128 characters");
-  }
-
-  if (!/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter");
-  }
-
-  if (!/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter");
-  }
-
-  if (!/\d/.test(password)) {
-    errors.push("Password must contain at least one number");
-  }
-
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
-    errors.push("Password must contain at least one special character");
-  }
-
-  // Check for common weak passwords
+  const rules=[{test:password.length < 8,message:"Password must be at least 8 characters long"},{
+    test:password.length>128,message:"Password must not exceed 128 characters"},{
+      test:!/[A-Z]/.test(password),
+      message:"Password must contain at least one uppercase letter"
+    },{test:!/[a-z]/.test(password),message:"Password must contain at least one lowercase letter"},
+    ,{test:!/\d/.test(password),message:"Password must contain at least one number"},
+    {test:!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),message:"Password must contain at least one special character"}
+  ];
+  const errors=rules.filter(r=>!r.test(password)).map(r=>r.message);
+ //common weak passwords check
   const commonPasswords = [
     "password",
     "12345678",

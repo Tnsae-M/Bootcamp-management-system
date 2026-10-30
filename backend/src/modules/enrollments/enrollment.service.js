@@ -27,8 +27,10 @@ export const enrollUser = async (userId, bootcampId) => {
     const existing = await Enrollment.findOne({ userId, bootcampId }).session(session);
     if (existing) throw buildError("Already enrolled", 409);
 
-    // Auto-assign division to user if not already assigned
-    if (bootcamp.divisionId && (!user.divisionId || user.divisionId.toString() !== bootcamp.divisionId.toString())) {
+    // Auto-assign division to user if not already assigned.
+    // Never overwrite an existing division: enrolling cross-division must not
+    // move the user out of their home division (ADR-0003).
+    if (bootcamp.divisionId && !user.divisionId) {
       user.divisionId = bootcamp.divisionId;
       await user.save({ session });
     }
