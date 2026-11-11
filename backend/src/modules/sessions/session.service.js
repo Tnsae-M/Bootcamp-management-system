@@ -3,6 +3,64 @@ import Bootcamp from "../bootcamps/bootcamp.model.js";
 import User from "../users/user.model.js";
 import * as notificationService from "../notification/notification.service.js";
 
+/**
+ * Validates session scheduling rules per ADR-0007 and SRS v2.0:
+ * 1. Minimum duration: 30 minutes
+ * 2. Advance scheduling requirement: >= 1 hour in advance
+ * 3. Global no-overlap: no two sessions across ANY division may share any time window
+ *
+ * @param {Object} params
+ * @param {Date} params.startTime
+ * @param {Date} params.endTime
+ * @param {boolean} [params.isNew=false]
+ * @param {string} [params.currentSessionId]
+ * @param {Array<Object>} [params.existingSessions=[]]
+ */
+export const validateSessionTiming = ({
+  startTime,
+  endTime,
+  isNew = false,
+  currentSessionId = null,
+  existingSessions = []
+}) => {
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+
+  // 1. Minimum duration: 30 minutes
+  const durationMs = end - start;
+  if (durationMs < 30 * 60 * 1000) {
+    const error = new Error("Minimum session duration is 30 minutes");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 2. Must be scheduled at least 1 hour in advance (for new sessions)
+  if (isNew && start < Date.now() + 60 * 60 * 1000) {
+    const error = new Error("Sessions must be scheduled at least 1 hour in advance");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 3. Global no-overlap enforcement (ADR-0007)
+  // Two sessions overlap iff: start < existing.end AND end > existing.start
+  for (const session of existingSessions) {
+    if (currentSessionId && String(session.id) === String(currentSessionId)) {
+      continue;
+    }
+
+    const sessStart = new Date(session.startTime).getTime();
+    const sessEnd = new Date(session.endTime).getTime();
+
+    if (start < sessEnd && end > sessStart) {
+      const error = new Error(
+        `Schedule Conflict: global session overlap with "${session.title || 'existing session'}"`
+      );
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+};
+
 const validateSessionConstraints = async (bootcampId, instructorId, startTime, endTime, sessionId = null) => {
   // 1. Minimum duration: 30 minutes
   const durationMs = endTime.getTime() - startTime.getTime();

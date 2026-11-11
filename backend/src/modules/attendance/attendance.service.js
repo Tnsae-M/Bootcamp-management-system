@@ -7,6 +7,117 @@ const buildError = (msg, code = 400) => {
   return err;
 };
 
+/**
+ * Determines a student's attendance status based on the submission timestamp
+ * relative to the window open time and expiry.
+ *
+ * @param {Object} params
+ * @param {Date} params.submittedAt
+ * @param {Date} params.openedAt
+ * @param {number} [params.windowMinutes=30]
+ * @param {Date} params.expiresAt
+ * @returns {'PRESENT' | 'LATE'}
+ */
+export const determineAttendanceStatus = ({
+  submittedAt,
+  openedAt,
+  windowMinutes = 30,
+  expiresAt
+}) => {
+  const submitTime = new Date(submittedAt).getTime();
+  const openTime = new Date(openedAt).getTime();
+  const expireTime = new Date(expiresAt).getTime();
+
+  if (submitTime > expireTime) {
+    const error = new Error("Attendance window has closed");
+    error.statusCode = 422;
+    throw error;
+  }
+
+  const windowLimit = openTime + windowMinutes * 60 * 1000;
+  if (submitTime <= windowLimit) {
+    return "PRESENT";
+  }
+
+  return "LATE";
+};
+
+/**
+ * Validates student code entry and creates an attendance record object.
+ *
+ * @param {Object} params
+ * @param {string} params.sessionId
+ * @param {string} params.userId
+ * @param {string} params.code - Entered code
+ * @param {Date} params.submittedAt
+ * @param {Object} params.activeCode - Active code record
+ * @param {Object} [params.existingRecord] - Prior attendance record if one exists
+ * @returns {Object} Prepared attendance record
+ */
+export const verifyAndRecordAttendance = ({
+  sessionId,
+  userId,
+  code,
+  submittedAt,
+  activeCode,
+  existingRecord = null
+}) => {
+  if (existingRecord) {
+    const error = new Error("Attendance already recorded for this session");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  if (
+    !activeCode ||
+    !activeCode.code ||
+    activeCode.code.trim().toUpperCase() !== String(code).trim().toUpperCase()
+  ) {
+    const error = new Error("Invalid attendance code");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const status = determineAttendanceStatus({
+    submittedAt,
+    openedAt: activeCode.openedAt,
+    windowMinutes: activeCode.windowMinutes,
+    expiresAt: activeCode.expiresAt
+  });
+
+  return {
+    sessionId,
+    userId,
+    status,
+    submittedAt: new Date(submittedAt)
+  };
+};
+
+/**
+ * Manually overrides an attendance record's status.
+ *
+ * @param {Object} params
+ * @param {Object} params.record - Existing attendance record
+ * @param {string} params.newStatus - PRESENT, LATE, ABSENT, or EXCUSED
+ * @param {string} [params.note] - Explanation note (mandatory for EXCUSED)
+ * @returns {Object} Updated record
+ */
+export const overrideAttendanceRecord = ({ record, newStatus, note = "" }) => {
+  const normalizedStatus = String(newStatus).toUpperCase();
+
+  if (normalizedStatus === "EXCUSED" && (!note || note.trim().length === 0)) {
+    const error = new Error("A note is required when marking attendance as EXCUSED");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    ...record,
+    status: normalizedStatus,
+    overrideNote: note ? note.trim() : null
+  };
+};
+
 export const markAttendance = async (data) => {
   const { sessionId, userId, status } = data;
 
