@@ -36,19 +36,7 @@ const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
-
-const validatePassword = (password) => {
-  const rules=[{test:password.length < 8,message:"Password must be at least 8 characters long"},{
-    test:password.length>128,message:"Password must not exceed 128 characters"},{
-      test:!/[A-Z]/.test(password),
-      message:"Password must contain at least one uppercase letter"
-    },{test:!/[a-z]/.test(password),message:"Password must contain at least one lowercase letter"},
-    ,{test:!/\d/.test(password),message:"Password must contain at least one number"},
-    {test:!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),message:"Password must contain at least one special character"}
-  ];
-  const errors=rules.filter(r=>!r.test(password)).map(r=>r.message);
- //common weak passwords check
-  const commonPasswords = [
+ const commonPasswords = [
     "password",
     "12345678",
     "qwerty",
@@ -56,6 +44,26 @@ const validatePassword = (password) => {
     "letmein",
     "welcome",
   ];
+const rules=[
+    {
+    fails:(password)=> {return password.length < 8},message:"Password must be at least 8 characters long"},
+    {
+    fails:(password)=> {return password.length>128},message:"Password must not exceed 128 characters"},
+    {
+      fails:(password)=> {return !/[A-Z]/.test(password)},
+      message:"Password must contain at least one uppercase letter"},
+    {
+      fails:(password)=> {return !/[a-z]/.test(password)},message:"Password must contain at least one lowercase letter"},
+    {
+        fails:(password)=> {return !/\d/.test(password)},message:"Password must contain at least one number"},
+    {
+      fails:(password)=> {return !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)},message:"Password must contain at least one special character"},
+    {
+      fails:(password)=>commonPasswords.some((common) => password.toLowerCase().includes(common)),message:"Password cannot contain common words"}
+  ];
+const validatePassword = (password) => {
+  const errors=rules.filter(r=>r.fails(password)).map(r=>r.message);
+ //common weak passwords check
   if (
     commonPasswords.some((common) => password.toLowerCase().includes(common))
   ) {
