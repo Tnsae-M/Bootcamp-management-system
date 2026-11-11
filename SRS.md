@@ -267,7 +267,7 @@ Instructors and Division Admins can upload or link resources against a Session o
 **Upload types:** PDF, Video, Image, ZIP  
 **External links:** Supported (URL with title and description)  
 **Tracking:** Download count per resource  
-**Storage:** Cloudinary
+**Storage:** Local server storage (static file serving via Express/Multer) or free S3-compatible bucket (e.g. Supabase Free Tier)
 
 ---
 
@@ -344,7 +344,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 
 - No submission after deadline unless `allowLateSubmission` is enabled.
 - GitHub links must match valid GitHub URL patterns.
-- File uploads stored in Cloudinary (size limit: 50 MB per file).
+- File uploads stored in local server filesystem (`uploads/`) with static serving (or free-tier bucket; size limit: 50 MB per file).
 - Resubmission allowed (when enabled) with full version history preserved.
 
 **Submission statuses:** `SUBMITTED` | `GRADED` | `RETURNED` (requires revision)
@@ -699,7 +699,7 @@ All error responses follow:
 ### Scalability
 
 - Stateless backend (no server-side session storage)
-- Cloudinary for all file storage (not local disk)
+- Local disk / persistent volume uploads via Multer (or free S3/Supabase storage)
 - PostgreSQL connection pooling (PgBouncer or Prisma connection pooling)
 
 ---
@@ -712,7 +712,7 @@ All error responses follow:
 | ORM | Prisma | Type-safe PostgreSQL client |
 | Database | **PostgreSQL** | Replaces MongoDB from v1 |
 | Frontend | React + TypeScript | Vite build tool |
-| File Storage | Cloudinary | Uploads, resources |
+| File Storage | Local disk (`/uploads`) / Multer | 100% Free & self-contained |
 | Notifications | In-app DB store + Telegram Bot API | No email in v1 |
 | Deployment | Render (backend + DB) + Vercel (frontend) | |
 
