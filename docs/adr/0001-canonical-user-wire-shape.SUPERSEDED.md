@@ -2,7 +2,7 @@
 
 The frontend and backend had drifted into four competing `User` shapes (two frontend interfaces, two backend response styles), causing ~30 type errors and runtime blanks. We decided the canonical shape follows the **database reality, populated**: `_id` (not `id`), `roles: UserRole[]` (uppercase, plural — the singular `role` field and all four of its compat layers are deleted), `divisionId` and `bootcamps` as populated references, never dropped and never bare ObjectIds.
 
-```
+```json
 {
   _id: string,
   name: string,

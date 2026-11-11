@@ -24,7 +24,7 @@ The BMS is a purpose-built internal platform for CSEC-ASTU. It is **not** a mult
 ### 1.3 Key Definitions
 
 | Term | Definition |
-|------|-----------|
+| ------ | ----------- |
 | **Division** | A permanent organizational track within CSEC-ASTU (e.g. Development). Never deleted. |
 | **Bootcamp** | A time-bound training cohort created under a Division (e.g. *Dev Cohort 2026*). Owns all sessions, tasks, groups, and attendance. |
 | **Guest** | A registered user who has not yet enrolled in any Bootcamp. |
@@ -55,7 +55,7 @@ The BMS is a purpose-built internal platform for CSEC-ASTU. It is **not** a mult
 Roles in BMS v2 are **context-scoped** — a user may hold different roles in different contexts, except for `SUPER ADMIN` which is global.
 
 | Role | Scope | Authority |
-|------|-------|-----------|
+| ------ | ------- | ----------- |
 | `SUPER ADMIN` | Global | Full platform override on all divisions, bootcamps, users, and sessions |
 | `DIVISION ADMIN` | Per Division | Division Head authority — manages bootcamps, instructors, applicants, induction decisions within their Division |
 | `INSTRUCTOR` | Per Bootcamp | Assigned to specific Bootcamps — creates sessions (pending approval), grades tasks, opens attendance |
@@ -66,7 +66,7 @@ Roles in BMS v2 are **context-scoped** — a user may hold different roles in di
 
 ### 2.2 Student Lifecycle State Machine
 
-```
+```text
 [Public Sign-Up]
        ↓
     GUEST
@@ -79,6 +79,7 @@ DIVISION MEMBER
 ```
 
 **Additional states:**
+
 - `APPLICANT_REJECTED` — application declined by Division Admin
 - `STUDENT_DROPPED` — removed from Bootcamp mid-way
 - `NOT_INDUCTED` — completed Bootcamp but not accepted into Division
@@ -86,7 +87,7 @@ DIVISION MEMBER
 ### 2.3 Role Permissions Matrix
 
 | Action | SUPER ADMIN | DIVISION ADMIN | INSTRUCTOR | STUDENT | GUEST |
-|--------|:-----------:|:--------------:|:----------:|:-------:|:-----:|
+| -------- | :-----------: | :--------------: | :----------: | :-------: | :-----: |
 | View open Bootcamp applications | ✅ | ✅ | — | — | ✅ |
 | Apply to Bootcamp | — | — | — | — | ✅ |
 | Screen/accept applicants | ✅ | ✅ (own division) | — | — | — |
@@ -142,10 +143,12 @@ DIVISION MEMBER
 Divisions are permanent. Only `SUPER ADMIN` can create or archive a Division.
 
 **Division data:**
+
 - `name`, `slug`, `description`, `createdAt`
 - Assigned `DIVISION ADMIN` user(s)
 
 **Division Dashboard (visible to Division Admin & Super Admin):**
+
 - Count of active Bootcamps
 - Total enrolled / screened students across all bootcamps
 - Average session attendance rate
@@ -159,6 +162,7 @@ Divisions are permanent. Only `SUPER ADMIN` can create or archive a Division.
 A **Bootcamp** is the central operational unit — it owns all learning activity.
 
 **Bootcamp fields:**
+
 - `title`, `division`, `description`
 - `startDate`, `endDate`
 - `applicationOpenDate`, `applicationCloseDate`
@@ -173,6 +177,7 @@ A **Bootcamp** is the central operational unit — it owns all learning activity
 - Assigned `INSTRUCTOR`(s)
 
 **Bootcamp Dashboard (visible to Division Admin & Instructors):**
+
 - Live leaderboard of all Students sorted by weighted score
 - Group milestone progress tracker
 - Attendance heatmap per session
@@ -190,6 +195,7 @@ When a Bootcamp status is `OPEN`:
 4. Division Admin receives a notification: *"New application submitted."*
 
 **Screening phase (Bootcamp status: `SCREENING`):**
+
 - Division Admin views ranked applicant list.
 - Can **Accept** or **Reject** each applicant.
 - Accepted → user's role for that Bootcamp transitions to `STUDENT`.
@@ -201,6 +207,7 @@ When a Bootcamp status is `OPEN`:
 ### 4.4 Session Management
 
 **Session fields:**
+
 - `title`, `description`
 - `bootcamp` (and therefore implicitly Division)
 - `location` (physical address or online link)
@@ -209,12 +216,14 @@ When a Bootcamp status is `OPEN`:
 - `status`: `PENDING` | `APPROVED` | `CANCELLED` | `COMPLETED`
 
 **Creation flow:**
+
 1. Assigned `INSTRUCTOR` creates a session → status: `PENDING`.
 2. `DIVISION ADMIN` reviews and **Approves** or **Rejects** with an optional note.
 3. On approval: status → `APPROVED`, enrolled Students are notified.
 4. `DIVISION ADMIN` can directly create sessions (auto-approved) or cancel any session.
 
 **Conflict detection (enforced at proposal time):**
+
 - **Global no-overlap rule:** No two sessions across any Division may share the same time slot.
 - **Instructor double-booking:** An Instructor cannot be assigned to overlapping sessions.
 - Sessions must be proposed at least **1 hour** before start time.
@@ -226,6 +235,7 @@ When a Bootcamp status is `OPEN`:
 Attendance is captured inside each session's **Attendance Tab**.
 
 **Check-in flow:**
+
 1. Instructor navigates to the Attendance Tab on a session page.
 2. Clicks **"Open Attendance"** → system generates a time-limited **Attendance Code** (alphanumeric, e.g. `A7X9Q`) and starts a countdown timer (default window: **30 minutes**, configurable per session).
 3. Code and a text input + Submit button appear on each enrolled Student's session view.
@@ -237,12 +247,14 @@ Attendance is captured inside each session's **Attendance Tab**.
 7. Division Admin can override Instructor decisions.
 
 **Attendance status types:**
+
 - `PRESENT` — checked in within the window
 - `LATE` — checked in after the window
 - `ABSENT` — did not check in before code expiry
 - `EXCUSED` — manually set by Instructor/Admin (requires a note)
 
 **Rules:**
+
 - One attendance record per Student per Session.
 - Only Students enrolled in the Bootcamp tied to the Session can check in.
 
@@ -262,6 +274,7 @@ Instructors and Division Admins can upload or link resources against a Session o
 ### 4.7 Group Management
 
 **Group formation:**
+
 1. After Bootcamp enrollment closes, Students receive a **group formation window** (deadline set by Division Admin).
 2. Within the window, Students can:
    - Create a group and invite peers by username or email.
@@ -273,6 +286,7 @@ Instructors and Division Admins can upload or link resources against a Session o
 5. Each group designates a **Group Leader** (the creator by default; can be reassigned by the Admin).
 
 **Group rules:**
+
 - One group per Student per Bootcamp.
 - Group Leader can submit Milestone Tasks on behalf of the group.
 - Any member can submit with Group Leader confirmation (or Admin override).
@@ -288,6 +302,7 @@ The task system contains two distinct task types under a unified interface.
 Assigned to **all Students** in the Bootcamp.
 
 **Fields:**
+
 - `title`, `description`, `instructions`
 - `submissionType`: `FILE` | `GITHUB_LINK` | `BOTH`
 - `deadline`
@@ -296,6 +311,7 @@ Assigned to **all Students** in the Bootcamp.
 - `allowResubmission` (bool)
 
 **Workflow:**
+
 - Each Student submits independently.
 - Instructor grades per Student: `score`, written `feedback`, `qualitativeFlag` (Excellent / Satisfactory / Needs Improvement).
 - Resubmissions tracked with version history.
@@ -305,6 +321,7 @@ Assigned to **all Students** in the Bootcamp.
 Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 
 **Fields:**
+
 - `title`, `description`, `milestoneNumber` (e.g. 1, 2, 3, Final)
 - `submissionType`: `FILE` | `GITHUB_LINK` | `BOTH`
 - `deadline`
@@ -312,6 +329,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 - `peerReviewRequired` (bool)
 
 **Workflow:**
+
 1. Group Leader (or any member with Leader confirmation) submits on behalf of the group.
 2. Submission includes individual **contribution notes** per member.
 3. If `peerReviewRequired`: Peer Review requests are automatically sent to all group members post-submission.
@@ -323,6 +341,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 ### 4.9 Submission System
 
 **Common rules for all submissions:**
+
 - No submission after deadline unless `allowLateSubmission` is enabled.
 - GitHub links must match valid GitHub URL patterns.
 - File uploads stored in Cloudinary (size limit: 50 MB per file).
@@ -365,7 +384,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 **Channels:** In-app Notification Centre + **Telegram Bot**
 
 | Event | Recipients |
-|-------|-----------|
+| ------- | ----------- |
 | Bootcamp application opened | Guests (all) |
 | Application submitted | Division Admin |
 | Application accepted / rejected | Applicant |
@@ -386,6 +405,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 | Induction decision published | Student |
 
 **Rules:**
+
 - Notifications are grouped and batched where appropriate (e.g. bulk task reminders).
 - Users can configure which notification types they receive via Telegram.
 - In-app notifications persist; Telegram messages are fire-and-forget.
@@ -395,6 +415,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 ### 4.12 Reports & Analytics
 
 #### Division Dashboard (Division Admin, Super Admin)
+
 - Count of active Bootcamps
 - Total enrolled / screened students
 - Average session attendance rate
@@ -402,12 +423,14 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 - Average session rating across all Bootcamps
 
 #### Bootcamp Dashboard (Division Admin, Instructors)
+
 - **Live Leaderboard:** All enrolled Students ranked by current weighted score (attendance + tasks + milestones + peer review)
 - **Group Milestone Tracker:** Visual timeline of each group's milestone submission status
 - **Attendance Heatmap:** Per-session attendance rates across all sessions
 - **Task Submission Rates:** % submitted, % graded, % late per task
 
 #### Student Profile (Division Admin, Instructors)
+
 - Per-session attendance log with status
 - Per-task score and feedback history
 - Group milestone submissions and contribution notes
@@ -416,6 +439,7 @@ Assigned to **Groups** as a phase of the Bootcamp Capstone Project.
 - **Exportable as PDF** for induction review
 
 #### Instructor Analytics (Division Admin)
+
 - Session ratings over time (trend)
 - Average task scores assigned
 - Attendance rates across their sessions
@@ -442,37 +466,44 @@ At the end of an `ACTIVE` Bootcamp, the Division Admin initiates the induction p
 ## ⚙️ 5. Business Rules
 
 ### Scheduling
+
 - Global no-overlap: no two sessions across any Division may share any time window.
 - Instructor cannot be double-booked.
 - Sessions must be proposed at least 1 hour before start time.
 - Sessions must have a minimum duration of 30 minutes.
 
 ### Attendance
+
 - Unique attendance record per Student per Session.
 - `EXCUSED` status requires a note.
 - Attendance code window default: 30 minutes (configurable per session).
 
 ### Feedback
+
 - Only `PRESENT` / `LATE` students may submit Session Feedback.
 - One Session Feedback per Student per Session.
 - Peer Reviews are due within 72 hours of Milestone submission.
 
 ### Tasks
+
 - No submission after deadline unless `allowLateSubmission` is enabled.
 - GitHub links must match a valid GitHub URL pattern.
 - File upload limit: 50 MB per file.
 
 ### Groups
+
 - Size: 2–8 Students.
 - One group per Student per Bootcamp.
 - Group formation deadline set by Division Admin per Bootcamp.
 
 ### Scoring
+
 - Bootcamp scoring weights must sum to 100%.
 - Weights are locked after Bootcamp transitions to `ACTIVE`.
 - Peer review score adjustment cannot take a student's milestone score below 0 or above max.
 
 ### Applications
+
 - Applications accepted only while Bootcamp status is `OPEN`.
 - A Guest may apply to multiple Bootcamps in different Divisions simultaneously.
 
@@ -495,7 +526,7 @@ At the end of an `ACTIVE` Bootcamp, the Division Admin initiates the induction p
 ### Core Entities
 
 | Entity | Key Relations |
-|--------|--------------|
+| -------- | -------------- |
 | `User` | Has many `UserRoles` (scoped), many `Enrollments`, many `Submissions` |
 | `UserRole` | Belongs to `User`, scoped to `Division` or `Bootcamp` |
 | `Division` | Has many `Bootcamps`, has many `DivisionAdmins` |
@@ -520,7 +551,8 @@ At the end of an `ACTIVE` Bootcamp, the Division Admin initiates the induction p
 ## 🔌 8. API Structure
 
 ### Auth
-```
+
+```text
 POST   /auth/register
 POST   /auth/login
 POST   /auth/refresh
@@ -530,7 +562,8 @@ POST   /auth/reset-password
 ```
 
 ### Divisions
-```
+
+```text
 GET    /divisions
 GET    /divisions/:id
 POST   /divisions                      (SUPER ADMIN)
@@ -538,7 +571,8 @@ PATCH  /divisions/:id                  (SUPER ADMIN)
 ```
 
 ### Bootcamps
-```
+
+```text
 GET    /bootcamps                      (public — open ones only for guests)
 GET    /bootcamps/:id
 POST   /bootcamps                      (DIVISION ADMIN, SUPER ADMIN)
@@ -552,7 +586,8 @@ POST   /bootcamps/:id/induction        (DIVISION ADMIN — submit induction deci
 ```
 
 ### Sessions
-```
+
+```text
 GET    /bootcamps/:bootcampId/sessions
 POST   /bootcamps/:bootcampId/sessions       (INSTRUCTOR, DIVISION ADMIN)
 PATCH  /sessions/:id                         (INSTRUCTOR, DIVISION ADMIN)
@@ -560,16 +595,18 @@ PATCH  /sessions/:id/approve                 (DIVISION ADMIN)
 DELETE /sessions/:id                         (DIVISION ADMIN)
 ```
 
-### Attendance
-```
+### API – Attendance
+
+```text
 POST   /sessions/:id/attendance/open         (INSTRUCTOR — open attendance window)
 POST   /sessions/:id/attendance/submit       (STUDENT — submit code)
 PATCH  /sessions/:id/attendance/:userId      (INSTRUCTOR, DIVISION ADMIN — override)
 GET    /sessions/:id/attendance              (INSTRUCTOR, DIVISION ADMIN)
 ```
 
-### Tasks
-```
+### API – Tasks
+
+```text
 GET    /bootcamps/:bootcampId/tasks
 POST   /bootcamps/:bootcampId/tasks          (INSTRUCTOR, DIVISION ADMIN)
 PATCH  /tasks/:id
@@ -578,8 +615,9 @@ POST   /tasks/:id/submit                     (STUDENT)
 PATCH  /tasks/:id/submissions/:submissionId/grade   (INSTRUCTOR, DIVISION ADMIN)
 ```
 
-### Groups
-```
+### API – Groups
+
+```text
 POST   /bootcamps/:bootcampId/groups         (STUDENT — create group)
 POST   /groups/:id/invite                    (STUDENT — invite member)
 PATCH  /groups/:id/invite/:inviteId          (STUDENT — accept/decline)
@@ -587,21 +625,24 @@ PATCH  /groups/:id/members/:userId           (DIVISION ADMIN — manual assignme
 GET    /bootcamps/:bootcampId/groups         (INSTRUCTOR, DIVISION ADMIN)
 ```
 
-### Feedback
-```
+### API – Feedback
+
+```text
 POST   /sessions/:id/feedback                (STUDENT)
 POST   /submissions/:id/peer-review          (STUDENT)
 GET    /sessions/:id/feedback                (DIVISION ADMIN — full; INSTRUCTOR — aggregate)
 ```
 
 ### Students
-```
+
+```text
 GET    /bootcamps/:bootcampId/students/:userId     (INSTRUCTOR, DIVISION ADMIN — full profile)
 GET    /bootcamps/:bootcampId/students/:userId/pdf (DIVISION ADMIN — export)
 ```
 
 ### Notifications
-```
+
+```text
 GET    /notifications
 PATCH  /notifications/:id/read
 PATCH  /notifications/settings
@@ -612,7 +653,7 @@ PATCH  /notifications/settings
 ## ⚠️ 9. Error Handling
 
 | Code | Meaning |
-|------|---------|
+| ------ | --------- |
 | 400 | Validation Error — malformed request body |
 | 401 | Unauthorized — missing or invalid token |
 | 403 | Forbidden — authenticated but insufficient role/scope |
@@ -622,6 +663,7 @@ PATCH  /notifications/settings
 | 500 | Internal Server Error |
 
 All error responses follow:
+
 ```json
 {
   "status": "error",
@@ -636,11 +678,13 @@ All error responses follow:
 ## 🚀 10. Non-Functional Requirements
 
 ### Performance
+
 - ≤ 300ms p95 response time for read operations
 - ≤ 600ms p95 response time for write operations
 - Leaderboard queries ≤ 500ms with up to 500 concurrent students
 
 ### Security
+
 - TLS enforced in production
 - Secure JWT handling (httpOnly cookies for refresh tokens)
 - Input validation via Zod on all endpoints
@@ -648,10 +692,12 @@ All error responses follow:
 - Audit log for all sensitive actions (induction decisions, attendance overrides, role changes)
 
 ### Reliability
+
 - 99.5% uptime target
 - Database backups: daily automated, 30-day retention
 
 ### Scalability
+
 - Stateless backend (no server-side session storage)
 - Cloudinary for all file storage (not local disk)
 - PostgreSQL connection pooling (PgBouncer or Prisma connection pooling)
@@ -661,7 +707,7 @@ All error responses follow:
 ## 🛠️ 11. Tech Stack
 
 | Layer | Technology | Notes |
-|-------|-----------|-------|
+| ------- | ----------- | ------- |
 | Backend | Node.js + Express | RESTful API |
 | ORM | Prisma | Type-safe PostgreSQL client |
 | Database | **PostgreSQL** | Replaces MongoDB from v1 |

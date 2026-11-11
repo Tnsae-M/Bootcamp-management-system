@@ -1,34 +1,172 @@
 # CSEC-ASTU Bootcamp Management System
 
-A bootcamp management system for the CSEC-ASTU club: admins run divisions and bootcamps, instructors run sessions and tasks, students attend and submit. One backend context; the frontend mirrors its language.
+A platform for running CSEC-ASTU's bootcamp-based student induction pipeline. Admins manage divisions and bootcamp cohorts, instructors deliver sessions and grade work, and students compete for induction into the club through attendance, tasks, and group capstone projects.
 
 ## Language
 
+### Actors
+
 **User**:
-A person with an account, identified by `_id`, holding one or more Roles. The canonical wire shape is defined by the sanitizer (see ADR-0001) — anything not in it does not leave the backend.
-_Avoid_: account, member
+A person with a registered account. Identified by `id`. Holds one or more scoped Role assignments. The canonical wire shape is defined by the shared sanitizer — secrets (password, tokens) are structurally absent, not merely hidden.
+_Avoid_: account, member, person
 
-**Role**:
-One of `SUPER ADMIN`, `ADMIN`, `INSTRUCTOR`, `STUDENT` — always uppercase, always carried as an array (`roles`). A User can hold several at once. `SUPER ADMIN` can do everything `ADMIN` can (see ADR-0002); no other Role implies another — in particular, `ADMIN` does not imply `INSTRUCTOR`.
-_Avoid_: `role` (singular field — deleted legacy), lowercase variants
+**Guest**:
+A User who has registered but holds no active Bootcamp enrollment. Can browse open Bootcamp listings and submit Applications.
+_Avoid_: unregistered, visitor, anonymous
 
-**Active Role**:
-The single Role a logged-in User is currently acting as, chosen client-side from their `roles`. Determines which dashboard the User sees — presentation only. It never restricts backend permissions: the backend authorizes against the full `roles` set (see ADR-0003). The original intent — a User who is an ADMIN in one Division and a STUDENT in another, switching hats — is not modeled in v1; Roles are global, not scoped to a Division. Division-scoped roles and an enforced Active Role are deferred to v2.
+**Applicant**:
+A Guest who has submitted an Application to a Bootcamp and is awaiting a screening decision. Not yet enrolled. Not yet a Student.
+_Avoid_: candidate, registrant
+
+**Student**:
+A User who has been accepted into a specific Bootcamp by a Division Admin. Their role is scoped to that Bootcamp. Can attend sessions, submit tasks, and participate in a group.
+_Avoid_: trainee, participant, enrollee
+
+**Division Member**:
+A Student who has been formally inducted into a Division at the end of a Bootcamp. The highest earned status in the club. Scoped to the Division, not to any single Bootcamp.
+_Avoid_: member (ambiguous), graduate
+
+**Instructor**:
+A User explicitly assigned to deliver sessions and grade work inside a specific Bootcamp. Role is scoped to that Bootcamp assignment. Does not imply Division Admin authority.
+_Avoid_: teacher, trainer, facilitator
+
+**Division Admin**:
+A User with administrative authority scoped to a specific Division. Equivalent to Division Head. Approves sessions, screens applicants, manages induction, and oversees all Bootcamps in their Division. Does not imply Instructor capability.
+_Avoid_: admin (use Division Admin to be precise), division head (avoid outside documentation)
+
+**Super Admin**:
+A User with platform-wide override authority across all Divisions and Bootcamps. The only global role.
+_Avoid_: system admin, root
+
+---
+
+### Core Entities
 
 **Division**:
-An organizational unit of the club that Users belong to. Users reference it via `divisionId`; on the wire it travels populated (`{_id, name}`).
-_Avoid_: `division` (bare string field — deleted legacy), group
+A permanent organizational track within CSEC-ASTU (e.g. Development, Cybersecurity). Never deleted — only archived. The parent of all Bootcamps. Has one or more Division Admins.
+_Avoid_: department, club, team, group
 
 **Bootcamp**:
-A training program a User is enrolled in. A User's enrollments travel as `bootcamps`, each entry a populated `bootcampId` reference.
+A time-bound training cohort created under a Division. The central operational unit — it owns Sessions, Tasks, Groups, Enrollments, and the Induction decision. A Division runs multiple Bootcamps over time; a Student belongs to one Bootcamp per enrollment cycle.
+_Avoid_: course, program, cohort (use Bootcamp)
 
-**Progress Report**:
-The backend-computed summary of a student's standing in a bootcamp: `attendanceRate`, `taskCompletionRate`, `avgScore`, and their weighted `overallProgress` (30/40/30). Computed only on the backend; the frontend displays, never derives.
-_Avoid_: score (ambiguous — say `avgScore` or `overallProgress`)
+**Enrollment**:
+The relationship between a User and a Bootcamp, carrying the User's current lifecycle status in that Bootcamp: `APPLICANT`, `STUDENT`, `INDUCTED`, `NOT_INDUCTED`, `DROPPED`.
+_Avoid_: registration, membership, participation
 
-**Sanitized User**:
-The only User representation allowed to cross the API boundary — produced by the shared allowlist sanitizer in the users module. Secrets (`password`, `refreshToken`, reset/verification tokens) are structurally absent, not just hidden.
+**Application**:
+A submission by a Guest expressing intent to join a Bootcamp. Contains a motivation statement and optional experience/links. Transitions into an Enrollment on acceptance.
+_Avoid_: registration form, sign-up
 
-## Session workflow
+**Role Assignment**:
+The pairing of a Role with a scope (Division or Bootcamp) for a specific User. A User may hold multiple Role Assignments simultaneously across different scopes.
+_Avoid_: permission, access level
 
-Every working session ends with `/handoff` (project skill, `.claude/skills/handoff/`): it writes `HANDOFF-<date>.md` at the repo root with verified progress and next actions, syncs this glossary if terms changed, and updates memory. Session state lives in the HANDOFF file — never in this glossary.
+---
+
+### Learning Operations
+
+**Session**:
+A single teaching event within a Bootcamp, owned by an Instructor and scoped to that Bootcamp. Must be proposed by an Instructor and approved by the Division Admin before it is published. Subject to global no-overlap enforcement across all Divisions.
+_Avoid_: class, lecture, meeting
+
+**Attendance Code**:
+A time-limited alphanumeric code generated by an Instructor to open a check-in window for a Session. Students enter the code to record their attendance. The code has a configurable validity window (default 30 minutes); submission within the window marks PRESENT, after the window marks LATE, and non-submission on expiry marks ABSENT automatically.
+_Avoid_: check-in token, session code
+
+**Attendance Record**:
+The authoritative record of a single Student's presence at a single Session. Status is one of: `PRESENT`, `LATE`, `ABSENT`, `EXCUSED`. One record per Student per Session; unique constraint enforced.
+_Avoid_: check-in, roll call entry
+
+**Individual Task**:
+An assignment issued to all Students in a Bootcamp individually. Each Student submits independently. Graded per Student with a numeric score, written feedback, and a qualitative flag.
+_Avoid_: assignment, homework (use Individual Task or just Task when unambiguous)
+
+**Group Milestone Task**:
+A deliverable assigned to a Group as a phase of the Bootcamp Capstone Project. Submitted by the Group Leader on behalf of the group. Graded once at the group level; individual scores are adjusted by Peer Review weights.
+_Avoid_: group assignment, milestone report (use Group Milestone Task)
+
+**Submission**:
+A Student's or Group's response to a Task. Carries the submitted artifact (file URL, GitHub link, or both), submission timestamp, and grading outcome. Resubmissions are tracked as versioned history.
+_Avoid_: upload, entry, response
+
+**Capstone Project**:
+The structured group deliverable that runs across the full duration of a Bootcamp, decomposed into sequenced Group Milestone Tasks. Each Bootcamp defines its own milestone structure.
+_Avoid_: final project, group project (use Capstone Project)
+
+---
+
+### Groups & Peer Dynamics
+
+**Group**:
+A team of 2–8 Students formed within a Bootcamp, with one designated Group Leader. Responsible for the Capstone Project. One Group per Student per Bootcamp.
+_Avoid_: team (use Group)
+
+**Group Leader**:
+The Student designated to submit Group Milestone Tasks on behalf of the Group. Defaults to the Group's creator; re-assignable by Division Admin.
+_Avoid_: team lead, captain
+
+**Peer Review**:
+A structured rating (1–5) and optional comment submitted by one Group member about another's contribution to a Milestone. Anonymous to peers; visible to Instructors and Division Admins. Feeds into individual Milestone score adjustment.
+_Avoid_: feedback (reserve for Session Feedback and Instructor Feedback), evaluation
+
+---
+
+### Feedback
+
+**Session Feedback**:
+A Student's anonymous rating (1–5) of a Session's quality, submitted within 48 hours of the Session's end. Anonymous to Instructors; Division Admins see full disaggregated data. Only Students marked PRESENT or LATE may submit.
+_Avoid_: rating, review (use Session Feedback)
+
+**Instructor Feedback**:
+A structured comment left by an Instructor when grading an Individual Task. Contains a numeric score, written comment, and a qualitative flag (`EXCELLENT`, `SATISFACTORY`, `NEEDS_IMPROVEMENT`). Visible to the assessed Student only.
+_Avoid_: grade note, comment (use Instructor Feedback)
+
+---
+
+### Scoring & Induction
+
+**Weighted Score**:
+A Student's computed performance score within a Bootcamp, calculated as a weighted sum of four signals: attendance rate, individual task scores, group milestone scores (peer-review adjusted), and peer review scores received. Weights are set per Bootcamp by the Division Admin and must sum to 100%.
+_Avoid_: total score, grade, GPA
+
+**Induction**:
+The formal decision by a Division Admin to promote a Student to Division Member at the end of a Bootcamp. The system computes Weighted Scores as a recommendation; the Division Admin holds absolute authority to accept or override any individual decision. Recorded with an optional override note for accountability.
+_Avoid_: graduation, acceptance, passing
+
+**Induction Decision**:
+The per-Student record of an Induction outcome: `INDUCTED` or `NOT_INDUCTED`. Carries the deciding Admin, timestamp, computed score at decision time, and any override note.
+_Avoid_: result, decision record
+
+---
+
+### Infrastructure
+
+**Notification**:
+An in-app message or Telegram Bot message delivered to a User on a lifecycle event. In-app notifications persist and carry `readAt`; Telegram messages are best-effort fire-and-forget. Email is not used in v1.
+_Avoid_: alert, message (use Notification)
+
+**Audit Log**:
+An append-only record of sensitive system actions: induction overrides, attendance overrides, role changes, and session cancellations. Never deleted.
+_Avoid_: activity log, history
+
+## Student Lifecycle
+
+```text
+GUEST → (submits Application) → APPLICANT
+APPLICANT → (Division Admin accepts) → STUDENT
+APPLICANT → (Division Admin rejects) → APPLICANT_REJECTED
+STUDENT → (Bootcamp completes, Admin inducts) → INDUCTED (→ DIVISION MEMBER role)
+STUDENT → (Bootcamp completes, Admin declines) → NOT_INDUCTED
+STUDENT → (removed mid-bootcamp) → DROPPED
+```
+
+## Session Lifecycle
+
+```text
+DRAFT (created by Instructor) → PENDING (submitted for approval)
+PENDING → APPROVED (Division Admin approves) → published to Students
+PENDING → REJECTED (Division Admin rejects, with note)
+APPROVED → CANCELLED (Division Admin cancels)
+APPROVED → COMPLETED (session end time passes)
+```
