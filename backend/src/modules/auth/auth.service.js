@@ -63,12 +63,6 @@ const rules=[
   ];
 const validatePassword = (password) => {
   const errors=rules.filter(r=>r.fails(password)).map(r=>r.message);
- //common weak passwords check
-  if (
-    commonPasswords.some((common) => password.toLowerCase().includes(common))
-  ) {
-    errors.push("Password cannot contain common words");
-  }
 
   return errors;
 };

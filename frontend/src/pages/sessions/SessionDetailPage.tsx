@@ -10,7 +10,7 @@ import { RootState } from '@/app/store';
 import { useSelector } from 'react-redux';
 
 type TabType = 'tasks' | 'submissions' | 'attendance' | 'resources' | 'feedback';
-
+type Tab={id:TabType,label:string};
 export default function SessionDetailPage() {
   const { sessionId, bootcampId: pathBootcampId } = useParams<{ sessionId: string, bootcampId: string }>();
   const location = useLocation();
@@ -30,17 +30,28 @@ export default function SessionDetailPage() {
   const currentRole = (activeRole || userRoles[0] || 'STUDENT').toUpperCase();
   const isFaculty = ['ADMIN', 'SUPER ADMIN', 'INSTRUCTOR'].includes(currentRole);
 
-  const tabs: { id: TabType, label: string }[] = [
-    { id: 'attendance', label: 'Attendance' },
-    { id: 'tasks', label: 'Tasks' },
-  ];
 
-  if (isFaculty) {
-    tabs.push({ id: 'submissions', label: 'Submissions' });
-    tabs.push({ id: 'feedback', label: 'Feedback' });
-  }
+  // const tabs: Tab[] = [
+  //   { id: 'attendance', label: 'Attendance' },
+  //   { id: 'tasks', label: 'Tasks' },
+  // ];
 
-  tabs.push({ id: 'resources', label: 'Resources' });
+  // if (isFaculty) {
+  //   tabs.push({ id: 'submissions', label: 'Submissions' });
+  //   tabs.push({ id: 'feedback', label: 'Feedback' });
+  // }
+
+  // tabs.push({ id: 'resources', label: 'Resources' });
+
+const facultyTab:Tab[]=[{id:'submissions',label:'Submissions'},
+  {id:"feedback",label:'Feedback'}];
+const tabs: Tab[] =[
+  { id: 'attendance', label: 'Attendance' },
+  { id: 'tasks', label: 'Tasks' },
+  ...(isFaculty?facultyTab:[]),
+  {id:'resources',label:'Resources'}
+];
+
 
   return (
     <div className="space-y-8">
