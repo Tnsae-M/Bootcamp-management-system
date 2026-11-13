@@ -29,6 +29,8 @@ export default function SessionDetailPage() {
   const userRoles = (user?.roles || []);
   const currentRole = (activeRole || userRoles[0] || 'STUDENT').toUpperCase();
   const isFaculty = ['ADMIN', 'SUPER ADMIN', 'INSTRUCTOR'].includes(currentRole);
+  const facultyTab:Tab[]=[{id:'submissions',label:'Submissions'},
+  {id:"feedback",label:'Feedback'}];
 
 
   // const tabs: Tab[] = [
@@ -43,8 +45,7 @@ export default function SessionDetailPage() {
 
   // tabs.push({ id: 'resources', label: 'Resources' });
 
-const facultyTab:Tab[]=[{id:'submissions',label:'Submissions'},
-  {id:"feedback",label:'Feedback'}];
+
 const tabs: Tab[] =[
   { id: 'attendance', label: 'Attendance' },
   { id: 'tasks', label: 'Tasks' },
