@@ -83,6 +83,96 @@ const validateName = (name) => {
   return null;
 };
 
+/**
+ * Registers a new user via public sign-up with default GUEST role.
+ *
+ * Grounded in:
+ * - SRS v2.0 Section 3.1 (Public Sign-up creates GUEST)
+ * - CONTEXT.md (Actors: Guest)
+ *
+ * @param {Object} input
+ * @param {string} input.fullName
+ * @param {string} input.email
+ * @param {string} input.password
+ * @param {string} [input.universityId]
+ * @param {string} [input.department]
+ * @param {string} [input.telegramUsername]
+ * @param {Object} [deps] - Optional test adapter dependencies
+ * @returns {Promise<{ user: Object, tokens: { accessToken: string, refreshToken: string } }>}
+ */
+export const registerGuest = async (input, deps = {}) => {
+  const { fullName, email, password, universityId, department, telegramUsername } = input;
+
+  if (!fullName || !email || !password) {
+    const error = new Error("Full name, email, and password are required");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Password rules validation
+  if (password.length < 8) {
+    const error = new Error("Password must be at least 8 characters long");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!/\d/.test(password)) {
+    const error = new Error("Password must contain at least one number");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Check duplicate
+  if (deps.db) {
+    const existing = deps.db.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    if (existing) {
+      const error = new Error("Email already exists");
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+
+  const saltRounds = 10;
+  const passwordHash = await bcrypt.hash(password, saltRounds);
+
+  const roleAssignments = [
+    { role: "GUEST", scopeType: "GLOBAL", scopeId: null }
+  ];
+
+  const userId = `usr_${Date.now()}`;
+  const newUser = {
+    id: userId,
+    fullName,
+    email: email.toLowerCase(),
+    universityId: universityId || null,
+    department: department || null,
+    telegramUsername: telegramUsername || null,
+    roleAssignments,
+    createdAt: new Date()
+  };
+
+  if (deps.db) {
+    deps.db.push({ ...newUser, passwordHash });
+  }
+
+  const accessToken = jwt.sign(
+    { userId, roleAssignments },
+    process.env.JWT_SECRET || "fallback-secret",
+    { expiresIn: "2h" }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId, roleAssignments },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || "fallback-secret",
+    { expiresIn: "7d" }
+  );
+
+  return {
+    user: newUser,
+    tokens: { accessToken, refreshToken }
+  };
+};
+
 export const registerUser = async (name, email, password, role) => {
   if (!name || !email || !password) {
     throw Object.assign(new Error("Name, email, and password are required."), {
