@@ -33,7 +33,12 @@ export const roleGuard = (allowedRoles) => {
           return next(error);
         }
         const payload = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = { userId: payload.userId, roles: payload.roles || [] };
+        req.user = {
+          id: payload.userId || payload.id,
+          userId: payload.userId || payload.id,
+          roles: payload.roles || [],
+          roleAssignments: payload.roleAssignments || [],
+        };
       }
 
       if (!req.user || !req.user.roles || req.user.roles.length === 0) {
@@ -92,7 +97,12 @@ export const authGuard = (req, res, next) => {
         return next(error);
       }
       const payload = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = { userId: payload.userId, roles: payload.roles || [] };
+      req.user = {
+        id: payload.userId || payload.id,
+        userId: payload.userId || payload.id,
+        roles: payload.roles || [],
+        roleAssignments: payload.roleAssignments || [],
+      };
     }
 
     if (!req.user) {

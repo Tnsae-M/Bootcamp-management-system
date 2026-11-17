@@ -5,17 +5,37 @@
  * - ADR-0005 (Roles are scoped to Division or Bootcamp, not global)
  * - ADR-0002 (SUPER ADMIN implies ADMIN; no other roles imply each other)
  */
+import prisma from "../config/prisma.js";
 
 export const scopeGuard = ({ requiredRole, scopeType, resolveScopeId }) => {
   return async (req, res, next) => {
     try {
-      if (!req.user || !req.user.roleAssignments) {
-        const error = new Error("Authentication required: missing role assignments");
+      if (!req.user) {
+        const error = new Error("Authentication required: missing user");
         error.status = 401;
         return next(error);
       }
 
-      const assignments = req.user.roleAssignments;
+      let assignments = req.user.roleAssignments;
+      if ((!assignments || assignments.length === 0) && prisma) {
+        try {
+          const userId = req.user.id || req.user.userId;
+          if (userId) {
+            assignments = await prisma.userRoleAssignment.findMany({
+              where: { userId },
+            });
+            req.user.roleAssignments = assignments;
+          }
+        } catch {
+          // ignore DB error in unit tests without DB
+        }
+      }
+
+      if (!assignments) {
+        const error = new Error("Authentication required: missing role assignments");
+        error.status = 401;
+        return next(error);
+      }
 
       // 1. SUPER_ADMIN bypasses all scope checks
       const isSuperAdmin = assignments.some(
