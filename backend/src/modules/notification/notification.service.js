@@ -1,72 +1,118 @@
-import Notification from "./notification.model.js";
-import User from "../users/user.model.js";
-import { sendEmail } from "../../utils/email.js";
+// Notifications Service - BMS Core Domain Logic & Telegram Bot Dispatcher
 
-const buildError = (message, statusCode) => {
+export const buildError = (message, statusCode = 400) => {
   const error = new Error(message);
   error.statusCode = statusCode;
   return error;
 };
 
-export const createNotification = async (data) => {
-  const { recipient, type, title, message, channels, metadata } = data;
-  
-  if (!recipient) throw buildError("Recipient is required.", 400);
-  if (!type) throw buildError("Type is required.", 400);
-  if (!title) throw buildError("Title is required.", 400);
-  if (!message) throw buildError("Message is required.", 400);
+/**
+ * Formats a domain notification event into a user-friendly Telegram Bot push message
+ */
+export const formatTelegramMessage = (event) => {
+  const { type, payload = {} } = event;
 
-  // 1. Handle In-App Notification (Save to DB)
-  let notification = null;
-  if (!channels || channels.inApp !== false) {
-    notification = await Notification.create({
-      recipient,
-      type,
-      title,
-      message,
-      channels: channels || { inApp: true, email: false },
-      metadata,
-    });
+  switch (type) {
+    case "SESSION_PROPOSED":
+      return `📢 [ASTU BMS] New Session proposed: "${payload.sessionTitle || "Untitled"}" on ${payload.date || "TBD"}${payload.instructorName ? ` by ${payload.instructorName}` : ""}.`;
+
+    case "TASK_ASSIGNED":
+      return `📝 [ASTU BMS] New task posted: "${payload.taskTitle || "New Task"}". Due: ${payload.dueDate || "No deadline"}.`;
+
+    case "SUBMISSION_GRADED":
+      return `🎯 [ASTU BMS] Task graded: "${payload.taskTitle || "Task"}". Score: ${payload.score}/${payload.maxScore || 100} (${payload.qualFlag || "GRADED"}).`;
+
+    case "APPLICATION_SUBMITTED":
+      return `📩 [ASTU BMS] New application submitted by ${payload.applicantName || "an applicant"} for ${payload.bootcampTitle || "Bootcamp"}.`;
+
+    case "APPLICATION_ACCEPTED":
+      return `🎉 [ASTU BMS] Congratulations! You have been accepted to ${payload.bootcampTitle || "the Bootcamp"}.`;
+
+    case "APPLICATION_REJECTED":
+      return `ℹ️ [ASTU BMS] Update regarding your application to ${payload.bootcampTitle || "the Bootcamp"}: ${payload.reason || "Application not accepted."}`;
+
+    case "INDUCTION_DECISION":
+      return `🏆 [ASTU BMS] Induction outcome for ${payload.bootcampTitle || "Bootcamp"}: ${payload.decision}.`;
+
+    default:
+      return `🔔 [ASTU BMS] ${payload.message || payload.title || "Notification update"}`;
+  }
+};
+
+/**
+ * Dispatches notification: persists in-app notification and delivers via Telegram Bot if eligible.
+ * Failure to send Telegram push does not abort in-app notification.
+ */
+export const dispatchNotification = async ({
+  event,
+  user,
+  store,
+  telegramAdapter,
+}) => {
+  if (!event) throw buildError("Notification event is required.", 400);
+
+  const formattedText = formatTelegramMessage(event);
+
+  // 1. In-App Notification Record
+  const inAppData = {
+    recipientId: event.recipientId || (user && user.id),
+    type: event.type,
+    title: event.title || event.type,
+    message: formattedText,
+    read: false,
+    createdAt: new Date(),
+    metadata: event.payload || {},
+  };
+
+  let inAppNotification = null;
+  if (store && typeof store.save === "function") {
+    inAppNotification = await store.save(inAppData);
+  } else {
+    inAppNotification = { id: `local-${Date.now()}`, ...inAppData };
   }
 
-  // 2. Handle Email Notification
-  if (channels && channels.email === true) {
+  // 2. Telegram Push Delivery
+  let telegramSent = false;
+  let telegramError = null;
+
+  const hasChatId = user && user.telegramChatId;
+  const isEnabledInPrefs =
+    !user ||
+    !user.preferences ||
+    user.preferences.telegramEnabled !== false;
+
+  if (hasChatId && isEnabledInPrefs && telegramAdapter && typeof telegramAdapter.sendMessage === "function") {
     try {
-      const user = await User.findById(recipient);
-      if (user && user.email) {
-        await sendEmail({
-          to: user.email,
-          subject: title,
-          text: message,
-          html: `<p>${message}</p>`,
-        });
-      }
-    } catch (emailError) {
-      console.error("Email delivery failed:", emailError.message);
-      // We don't throw here so the in-app notification still works
+      await telegramAdapter.sendMessage(user.telegramChatId, formattedText);
+      telegramSent = true;
+    } catch (err) {
+      telegramError = err.message || "Failed to deliver Telegram notification";
     }
   }
 
-  return notification;
+  return {
+    inAppNotification,
+    telegramSent,
+    telegramError,
+  };
 };
 
-export const getNotificationByUser = async (userId) => {
-  if (!userId) throw buildError("User ID is required.", 400);
-  
-  return await Notification.find({ recipient: userId })
-    .sort({ createdAt: -1 });
+/**
+ * Marks notification as read
+ */
+export const markNotificationAsRead = (notification) => {
+  if (!notification) throw buildError("Notification is required.", 400);
+
+  return {
+    ...notification,
+    read: true,
+    readAt: new Date(),
+  };
 };
 
-export const markAsRead = async (notificationId) => {
-  if (!notificationId) throw buildError("Notification ID is required.", 400);
-
-  const notification = await Notification.findByIdAndUpdate(
-    notificationId,
-    { is_read: true },
-    { returnDocument: 'after' }
-  );
-
-  if (!notification) throw buildError("Notification not found.", 404);
-  
-  return notification;
-};
+/**
+ * Filters list of notifications to unread for a specific user
+ */
+export const listUnreadNotifications = (notifications = [], userId) => {
+  return notifications.filter((n) => n.recipientId === userId && !n.read);
+};
