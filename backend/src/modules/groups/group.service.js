@@ -9,6 +9,128 @@ const buildError = (msg, code = 400) => {
   return err;
 };
 
+/**
+ * Forms a new student capstone group with default Group Leader assignment.
+ *
+ * Grounded in:
+ * - SRS v2.0 Section 4.7 (Group size: 2-8 students, one group per student per bootcamp)
+ * - CONTEXT.md (Group, Group Leader)
+ *
+ * @param {Object} params
+ * @param {string} params.bootcampId
+ * @param {string} params.name
+ * @param {string} params.creatorId
+ * @param {Array<Object>} [params.existingGroupMemberships=[]]
+ * @returns {Object} { group, members }
+ */
+export const formGroup = ({
+  bootcampId,
+  name,
+  creatorId,
+  existingGroupMemberships = []
+}) => {
+  if (!bootcampId || !name || !creatorId) {
+    throw buildError("bootcampId, group name, and creatorId are required", 400);
+  }
+
+  // Check if creator is already in a group in this bootcamp
+  const alreadyInGroup = existingGroupMemberships.some(
+    (m) => m.userId === creatorId && m.bootcampId === bootcampId
+  );
+
+  if (alreadyInGroup) {
+    throw buildError("User is already a member of a group in this bootcamp", 409);
+  }
+
+  const groupId = `grp_${Date.now()}`;
+  const group = {
+    id: groupId,
+    bootcampId,
+    name: name.trim(),
+    createdAt: new Date()
+  };
+
+  const members = [
+    {
+      id: `gm_${Date.now()}_1`,
+      groupId,
+      userId: creatorId,
+      isLeader: true,
+      joinedAt: new Date()
+    }
+  ];
+
+  return {
+    group,
+    members
+  };
+};
+
+/**
+ * Adds an enrolled student to an existing group, validating capacity (max 8)
+ * and single-group membership invariants.
+ *
+ * @param {Object} params
+ * @param {Object} params.group
+ * @param {Array<Object>} params.currentMembers
+ * @param {string} params.userId
+ * @param {Array<Object>} [params.existingGroupMemberships=[]]
+ * @returns {Object} New GroupMember record
+ */
+export const addMemberToGroup = ({
+  group,
+  currentMembers,
+  userId,
+  existingGroupMemberships = []
+}) => {
+  // Max capacity constraint: 8 members (SRS v2.0 Section 4.7)
+  if (currentMembers.length >= 8) {
+    throw buildError("Group capacity cannot exceed 8 members", 400);
+  }
+
+  // Check if student already in this group
+  if (currentMembers.some((m) => m.userId === userId)) {
+    throw buildError("User is already in this group", 409);
+  }
+
+  // Check if student already in another group in this bootcamp
+  const alreadyInOtherGroup = existingGroupMemberships.some(
+    (m) => m.userId === userId && m.bootcampId === group.bootcampId
+  );
+
+  if (alreadyInOtherGroup) {
+    throw buildError("User is already a member of a group in this bootcamp", 409);
+  }
+
+  return {
+    id: `gm_${Date.now()}_${currentMembers.length + 1}`,
+    groupId: group.id,
+    userId,
+    isLeader: false,
+    joinedAt: new Date()
+  };
+};
+
+/**
+ * Reassigns the Group Leader role to another existing member of the group.
+ *
+ * @param {Object} params
+ * @param {Array<Object>} params.currentMembers
+ * @param {string} params.newLeaderUserId
+ * @returns {Array<Object>} Updated member list
+ */
+export const reassignGroupLeader = ({ currentMembers, newLeaderUserId }) => {
+  const targetMember = currentMembers.find((m) => m.userId === newLeaderUserId);
+  if (!targetMember) {
+    throw buildError("User is not a member of this group", 404);
+  }
+
+  return currentMembers.map((m) => ({
+    ...m,
+    isLeader: m.userId === newLeaderUserId
+  }));
+};
+
 //  Create group
 export const createGroup = async (data, creatorId) => {
   const { bootcampId, members = [] } = data;
