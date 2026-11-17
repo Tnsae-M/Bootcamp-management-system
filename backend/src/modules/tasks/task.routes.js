@@ -1,51 +1,66 @@
 import { Router } from "express";
 import {
   createTask,
-  getTasksByBootcamp,
+  getTasks,
   getTaskById,
   updateTask,
   deleteTask,
-  getAllTasks
 } from "./task.controller.js";
-
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
 const router = Router();
 
-// Get all tasks relevant to user
-router.get("/", authGuard, getAllTasks);
+// Enrolled students and instructors can read tasks
+router.get("/", authGuard, getTasks);
+router.get("/:id", authGuard, getTaskById);
 
-// Create task (admin/instructor)
+// Instructor creates task for bootcamp
 router.post(
   "/",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: (req) => req.body.bootcampId,
+  }),
   createTask
 );
 
-// Get tasks for a bootcamp (students must be enrolled)
-router.get(
-  "/bootcamp/:bootcampId",
-  authGuard,
-  getTasksByBootcamp
-);
-
-// Get single task
-router.get("/:id", authGuard, getTaskById);
-
-// Update task
+// Instructor updates task
 router.put(
   "/:id",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const task = await prisma.task.findUnique({
+        where: { id: req.params.id },
+        select: { bootcampId: true },
+      });
+      return task?.bootcampId;
+    },
+  }),
   updateTask
 );
 
-// Delete task
+// Instructor deletes task
 router.delete(
   "/:id",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const task = await prisma.task.findUnique({
+        where: { id: req.params.id },
+        select: { bootcampId: true },
+      });
+      return task?.bootcampId;
+    },
+  }),
   deleteTask
 );
 

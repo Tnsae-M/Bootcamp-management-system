@@ -1,27 +1,86 @@
 import { Router } from "express";
 import {
-  getBootcampById,
+  createBootcamp,
   getBootcamps,
-  updateBootcamp,
-  deleteBootcamp,
+  getBootcampById,
+  updateStatus,
+  updateWeights,
+  screenApplicant,
 } from "./bootcamp.controller.js";
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
 const router = Router();
 
-router.get("/", authGuard, getBootcamps);
-router.get("/:id", authGuard, getBootcampById);
-router.put(
-  "/:id",
+// Public: Guests can browse open bootcamps
+router.get("/", getBootcamps);
+router.get("/:id", getBootcampById);
+
+// Create bootcamp: Requires DIVISION_ADMIN for target division
+router.post(
+  "/",
   authGuard,
-  roleGuard(["ADMIN"]),
-  updateBootcamp,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: (req) => req.body.divisionId,
+  }),
+  createBootcamp
 );
-router.delete(
-  "/:id",
+
+// Status transition: Requires DIVISION_ADMIN for bootcamp's division
+router.put(
+  "/:id/status",
   authGuard,
-  roleGuard(["ADMIN"]),
-  deleteBootcamp,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const bc = await prisma.bootcamp.findUnique({
+        where: { id: req.params.id },
+        select: { divisionId: true },
+      });
+      return bc?.divisionId;
+    },
+  }),
+  updateStatus
+);
+
+// Weights update: Requires DIVISION_ADMIN
+router.put(
+  "/:id/weights",
+  authGuard,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const bc = await prisma.bootcamp.findUnique({
+        where: { id: req.params.id },
+        select: { divisionId: true },
+      });
+      return bc?.divisionId;
+    },
+  }),
+  updateWeights
+);
+
+// Screening applicant: Requires DIVISION_ADMIN
+router.post(
+  "/:id/screen",
+  authGuard,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const bc = await prisma.bootcamp.findUnique({
+        where: { id: req.params.id },
+        select: { divisionId: true },
+      });
+      return bc?.divisionId;
+    },
+  }),
+  screenApplicant
 );
 
 export default router;

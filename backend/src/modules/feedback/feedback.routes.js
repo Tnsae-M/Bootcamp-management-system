@@ -1,46 +1,20 @@
 import { Router } from "express";
 import {
-  createFeedback,
-  getBootcampFeedback,
-  getInstructorFeedback,
-  getSessionFeedback
+  submitSessionFeedback,
+  submitPeerReview,
+  getSessionFeedbacks,
 } from "./feedback.controller.js";
-
-
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
 
 const router = Router();
 
-// Student submits feedback
-router.post(
-  "/",
-  authGuard,
-  roleGuard("student"),
-  createFeedback
-);
+// Student submits session feedback (window: 48h post-session)
+router.post("/session", authGuard, submitSessionFeedback);
 
-// View bootcamp feedback (admin/instructor)
-router.get(
-  "/bootcamp/:id",
-  authGuard,
-  roleGuard(["ADMIN", "INSTRUCTOR"]),
-  getBootcampFeedback
-);
+// Student submits peer review for group teammate (window: 72h post-milestone)
+router.post("/peer-review", authGuard, submitPeerReview);
 
-// View instructor feedback
-router.get(
-  "/instructor/:id",
-  authGuard,
-  roleGuard(["ADMIN", "INSTRUCTOR"]),
-  getInstructorFeedback
-);
+// Instructors/Admins view anonymous session feedback
+router.get("/session/:sessionId", authGuard, getSessionFeedbacks);
 
-// View session feedback
-router.get(
-  "/session/:id",
-  authGuard,
-  roleGuard(["ADMIN", "INSTRUCTOR"]),
-  getSessionFeedback
-);
-
-export default router;
+export default router;

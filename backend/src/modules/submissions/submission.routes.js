@@ -3,63 +3,76 @@ import multer from "multer";
 import path from "path";
 import {
   submitTask,
-  getMySubmissions,
-  getSubmissionsByTask,
   gradeSubmission,
+  returnSubmission,
+  getSubmissionsByTask,
+  getMySubmissions,
 } from "./submission.controller.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
-
-// Configure multer for file uploads
+// Local filesystem upload config (100% free stack)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(null, file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname));
+  },
 });
 
-const upload = multer({ 
-  storage: storage,
-  limits: {
-    fileSize: 10 * 1024 * 1024 // 10MB limit
-  },
-  fileFilter: (req, file, cb) => {
-    // Accept PDF files and common document types
-    const allowedTypes = ['.pdf', '.doc', '.docx', '.txt', '.zip', '.rar'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowedTypes.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Invalid file type. Only PDF, DOC, DOCX, TXT, ZIP, RAR files are allowed.'));
-    }
-  }
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB per SRS
 });
 
 const router = Router();
 
-// Student submits
-router.post("/", authGuard, roleGuard("student"), upload.single('file'), submitTask);
+// Student submits task
+router.post("/", authGuard, upload.single("file"), submitTask);
 
-// Student views own
-router.get("/me", authGuard, roleGuard("student"), getMySubmissions);
+// Student views own submissions
+router.get("/me", authGuard, getMySubmissions);
 
-// Instructor views submissions
-router.get(
-  "/task/:taskId",
-  authGuard,
-  roleGuard(["ADMIN", "INSTRUCTOR"]),
-  getSubmissionsByTask
-);
+// View submissions for a task (Instructor)
+router.get("/task/:taskId", authGuard, getSubmissionsByTask);
 
-// Instructor grades
-router.put(
+// Grade submission: Requires INSTRUCTOR
+router.post(
   "/:id/grade",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const sub = await prisma.submission.findUnique({
+        where: { id: req.params.id },
+        include: { task: true },
+      });
+      return sub?.task?.bootcampId;
+    },
+  }),
   gradeSubmission
+);
+
+// Return submission for revision: Requires INSTRUCTOR
+router.post(
+  "/:id/return",
+  authGuard,
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const sub = await prisma.submission.findUnique({
+        where: { id: req.params.id },
+        include: { task: true },
+      });
+      return sub?.task?.bootcampId;
+    },
+  }),
+  returnSubmission
 );
 
 export default router;

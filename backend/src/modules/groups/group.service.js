@@ -1,7 +1,4 @@
-import Group from "./group.model.js";
-import Enrollment from "../enrollments/enrollment.model.js";
-import GroupProgress from "./progress.model.js";
-import Bootcamp from "../bootcamps/bootcamp.model.js";
+import prisma from "../../config/prisma.js";
 
 const buildError = (msg, code = 400) => {
   const err = new Error(msg);
@@ -11,17 +8,6 @@ const buildError = (msg, code = 400) => {
 
 /**
  * Forms a new student capstone group with default Group Leader assignment.
- *
- * Grounded in:
- * - SRS v2.0 Section 4.7 (Group size: 2-8 students, one group per student per bootcamp)
- * - CONTEXT.md (Group, Group Leader)
- *
- * @param {Object} params
- * @param {string} params.bootcampId
- * @param {string} params.name
- * @param {string} params.creatorId
- * @param {Array<Object>} [params.existingGroupMemberships=[]]
- * @returns {Object} { group, members }
  */
 export const formGroup = ({
   bootcampId,
@@ -60,66 +46,74 @@ export const formGroup = ({
     }
   ];
 
-  return {
-    group,
-    members
-  };
+  return { group, members };
 };
 
 /**
- * Adds an enrolled student to an existing group, validating capacity (max 8)
- * and single-group membership invariants.
- *
- * @param {Object} params
- * @param {Object} params.group
- * @param {Array<Object>} params.currentMembers
- * @param {string} params.userId
- * @param {Array<Object>} [params.existingGroupMemberships=[]]
- * @returns {Object} New GroupMember record
+ * Adds a student to an existing group, checking size limits (max 8) and duplicate membership.
  */
 export const addMemberToGroup = ({
   group,
   currentMembers,
   userId,
+  studentId,
+  isEnrolledStudent = true,
   existingGroupMemberships = []
 }) => {
-  // Max capacity constraint: 8 members (SRS v2.0 Section 4.7)
+  const effectiveUserId = userId || studentId;
+
+  if (!group || !currentMembers) {
+    throw buildError("Group and current members are required", 400);
+  }
+
+  // Group size limit: 8 students max (SRS Section 4.7)
   if (currentMembers.length >= 8) {
     throw buildError("Group capacity cannot exceed 8 members", 400);
   }
 
-  // Check if student already in this group
-  if (currentMembers.some((m) => m.userId === userId)) {
-    throw buildError("User is already in this group", 409);
+  // Already in this group?
+  if (currentMembers.some((m) => m.userId === effectiveUserId)) {
+    throw buildError("User is already a member of this group", 409);
   }
 
-  // Check if student already in another group in this bootcamp
-  const alreadyInOtherGroup = existingGroupMemberships.some(
-    (m) => m.userId === userId && m.bootcampId === group.bootcampId
+  // Already in another group in the same bootcamp?
+  const alreadyInGroup = existingGroupMemberships.some(
+    (m) => m.userId === effectiveUserId && m.bootcampId === group.bootcampId
   );
-
-  if (alreadyInOtherGroup) {
+  if (alreadyInGroup) {
     throw buildError("User is already a member of a group in this bootcamp", 409);
   }
 
-  return {
+  const newMember = {
     id: `gm_${Date.now()}_${currentMembers.length + 1}`,
     groupId: group.id,
-    userId,
+    userId: effectiveUserId,
     isLeader: false,
     joinedAt: new Date()
   };
+
+  return newMember;
 };
 
+export const addStudentToGroup = addMemberToGroup;
+
 /**
- * Reassigns the Group Leader role to another existing member of the group.
- *
- * @param {Object} params
- * @param {Array<Object>} params.currentMembers
- * @param {string} params.newLeaderUserId
- * @returns {Array<Object>} Updated member list
+ * Designates or transfers the Group Leader role within a group.
  */
-export const reassignGroupLeader = ({ currentMembers, newLeaderUserId }) => {
+export const reassignGroupLeader = ({
+  currentMembers = [],
+  newLeaderUserId,
+  actorId,
+  isInstructorOrAdmin = false
+}) => {
+  const currentLeader = currentMembers.find((m) => m.isLeader);
+
+  if (actorId && !isInstructorOrAdmin) {
+    if (!currentLeader || currentLeader.userId !== actorId) {
+      throw buildError("Only the current group leader or an instructor can transfer leadership", 403);
+    }
+  }
+
   const targetMember = currentMembers.find((m) => m.userId === newLeaderUserId);
   if (!targetMember) {
     throw buildError("User is not a member of this group", 404);
@@ -131,125 +125,107 @@ export const reassignGroupLeader = ({ currentMembers, newLeaderUserId }) => {
   }));
 };
 
-//  Create group
-export const createGroup = async (data, creatorId) => {
-  const { bootcampId, members = [] } = data;
+export const designateGroupLeader = reassignGroupLeader;
 
-  //  Validate members are enrolled
-  for (const userId of members) {
-    const enrollment = await Enrollment.findOne({
-      userId,
-      bootcampId,
-    });
+// ─── Prisma Database Operations ──────────────────────────────────────────────
 
-    if (!enrollment) {
-      throw buildError(`User ${userId} is not enrolled`, 400);
-    }
-  }
-
-  return await Group.create({
-    ...data,
-    createdBy: creatorId,
+export const createGroupAction = async ({ bootcampId, name, creatorId }) => {
+  const existingMemberships = await prisma.groupMember.findMany({
+    where: { userId: creatorId, group: { bootcampId } },
+    include: { group: true },
   });
-};
 
-//  Get groups by bootcamp
-export const getGroupsByBootcamp = async (bootcampId) => {
-  return await Group.find({ bootcampId })
-    .populate("members", "name email")
-    .populate("mentor", "name email")
-    .populate("createdBy", "name");
-};
-
-
-//  Add member
-export const addMember = async (groupId, userId, bootcampId) => {
-  const group = await Group.findById(groupId);
-  if (!group) throw buildError("Group not found", 404);
-
-  const enrollment = await Enrollment.findOne({
-    userId,
+  const formed = formGroup({
     bootcampId,
+    name,
+    creatorId,
+    existingGroupMemberships: existingMemberships.map((m) => ({
+      userId: m.userId,
+      bootcampId: m.group.bootcampId,
+    })),
   });
 
-  if (!enrollment) {
-    throw buildError("User not enrolled in this bootcamp", 400);
-  }
-
-  if (group.members.includes(userId)) {
-    throw buildError("User already in group", 409);
-  }
-
-  group.members.push(userId);
-  await group.save();
-
-  return group;
+  return await prisma.group.create({
+    data: {
+      bootcampId: formed.group.bootcampId,
+      name: formed.group.name,
+      members: {
+        create: {
+          userId: creatorId,
+          isLeader: true,
+        },
+      },
+    },
+    include: {
+      members: { include: { user: true } },
+    },
+  });
 };
 
-//  Remove member
-export const removeMember = async (groupId, userId) => {
-  const group = await Group.findById(groupId);
+export const getGroupsByBootcamp = async (bootcampId) => {
+  return await prisma.group.findMany({
+    where: { bootcampId },
+    include: {
+      members: {
+        include: {
+          user: { select: { id: true, fullName: true, email: true, universityId: true } },
+        },
+      },
+      _count: { select: { submissions: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const assignLeaderAction = async ({ groupId, newLeaderId, actorId }) => {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: true },
+  });
   if (!group) throw buildError("Group not found", 404);
 
-  group.members = group.members.filter(
-    (id) => id.toString() !== userId
+  const updatedMembers = designateGroupLeader({
+    members: group.members,
+    newLeaderId,
+    actorId,
+    isInstructorOrAdmin: true,
+  });
+
+  await prisma.$transaction(
+    updatedMembers.map((m) =>
+      prisma.groupMember.update({
+        where: { id: m.id },
+        data: { isLeader: m.isLeader },
+      })
+    )
   );
 
-  await group.save();
-  return group;
+  return await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { include: { user: true } } },
+  });
 };
 
-// Delete group
-export const deleteGroup = async (groupId) => {
-  const group = await Group.findById(groupId);
+export const addMember = async (groupId, userId) => {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: true },
+  });
   if (!group) throw buildError("Group not found", 404);
 
-  await Group.findByIdAndDelete(groupId);
-  return { id: groupId };
-};
-
-// --- Weekly Progress ---
-
-export const submitGroupProgress = async (data, studentId) => {
-  const { groupId, bootcampId, title, description, links } = data;
-
-  // 1. Verify Group & Membership
-  const group = await Group.findById(groupId);
-  if (!group) throw buildError("Group not found", 404);
-  if (!group.members.includes(studentId)) {
-    throw buildError("Only group members can submit progress", 403);
+  if (group.members.length >= 8) {
+    throw buildError("Group has reached maximum size of 8 members", 400);
   }
 
-  // 2. Calculate Week Number
-  const bootcamp = await Bootcamp.findById(bootcampId);
-  if (!bootcamp) throw buildError("Bootcamp not found", 404);
-  
-  const startDate = bootcamp.startDate || bootcamp.createdAt;
-  const now = new Date();
-  const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-  const weekNumber = Math.max(1, Math.ceil((diffDays + 1) / 7));
+  const existing = group.members.find((m) => m.userId === userId);
+  if (existing) throw buildError("User is already in this group", 409);
 
-  // 3. Create Progress (Unique constraint in model handles 1 per week)
-  try {
-    return await GroupProgress.create({
+  return await prisma.groupMember.create({
+    data: {
       groupId,
-      bootcampId,
-      submittedBy: studentId,
-      weekNumber,
-      title,
-      description,
-      links
-    });
-  } catch (err) {
-    if (err.code === 11000) {
-      throw buildError(`Progress for Week ${weekNumber} has already been submitted for this group`, 409);
-    }
-    throw err;
-  }
-};
-
-export const getGroupProgress = async (groupId) => {
-  return await GroupProgress.find({ groupId })
-    .populate("submittedBy", "name")
-    .sort({ weekNumber: -1 });
+      userId,
+      isLeader: false,
+    },
+    include: { user: true },
+  });
 };

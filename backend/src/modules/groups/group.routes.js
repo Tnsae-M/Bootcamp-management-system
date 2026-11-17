@@ -1,25 +1,24 @@
-import express from "express";
-import { 
-  createGroupController, 
-  getGroupsByBootcampController, 
-  addMemberController, 
-  removeMemberController, 
-  deleteGroupController,
-  submitProgress,
-  getGroupProgressLogs
+import { Router } from "express";
+import {
+  createGroup,
+  getGroupsByBootcamp,
+  assignLeader,
+  addMember,
 } from "./group.controller.js";
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
 
-const router = express.Router();
+const router = Router();
 
-router.post("/", authGuard, roleGuard(["ADMIN"]), createGroupController);
-router.get("/bootcamp/:bootcampId", authGuard, getGroupsByBootcampController);
-router.put("/:groupId/members", authGuard, roleGuard(["ADMIN"]), addMemberController);
-router.delete("/:groupId/members/:userId", authGuard, roleGuard(["ADMIN"]), removeMemberController);
-router.delete("/:groupId", authGuard, roleGuard(["ADMIN"]), deleteGroupController);
+// Student creates group in bootcamp
+router.post("/", authGuard, createGroup);
 
-// Weekly Progress
-router.post("/progress", authGuard, submitProgress);
-router.get("/progress/:groupId", authGuard, getGroupProgressLogs);
+// View groups in bootcamp
+router.get("/bootcamp/:bootcampId", authGuard, getGroupsByBootcamp);
+
+// Assign or transfer group leader
+router.put("/:id/leader", authGuard, assignLeader);
+
+// Add member to group
+router.post("/:id/members", authGuard, addMember);
 
 export default router;

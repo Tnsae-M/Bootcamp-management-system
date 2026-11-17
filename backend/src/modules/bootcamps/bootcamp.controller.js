@@ -2,14 +2,14 @@ import * as bootcampService from "./bootcamp.service.js";
 
 export const createBootcamp = async (req, res, next) => {
   try {
-    const { divisionId } = req.params;
-    const { name, startDate, endDate, ...payload } = req.body;
+    const { divisionId, startDate, endDate, ...payload } = req.body;
+    const adminId = req.user.id || req.user.userId;
     const bootcamp = await bootcampService.createBootcamp(
-      divisionId,
-      { name, ...payload },
+      divisionId || req.params.divisionId,
+      payload,
       startDate,
       endDate,
-      req.user.userId,
+      adminId
     );
     return res.status(201).json({
       success: true,
@@ -23,24 +23,13 @@ export const createBootcamp = async (req, res, next) => {
 
 export const getBootcamps = async (req, res, next) => {
   try {
-    const bootcamps = await bootcampService.getBootcamps();
-    return res.status(200).json({
-      success: true,
-      data: bootcamps,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
+    const filters = {};
+    if (req.query.status) filters.status = req.query.status;
+    if (req.query.divisionId) filters.divisionId = req.query.divisionId;
 
-export const getBootcampsByDivision = async (req, res, next) => {
-  try {
-    const bootcamps = await bootcampService.getBootcampsByDivision(
-      req.params.divisionId,
-    );
+    const bootcamps = await bootcampService.getBootcamps(filters);
     return res.status(200).json({
       success: true,
-      message: "Bootcamps retrieved successfully",
       data: bootcamps,
     });
   } catch (error) {
@@ -53,7 +42,6 @@ export const getBootcampById = async (req, res, next) => {
     const bootcamp = await bootcampService.getBootcampById(req.params.id);
     return res.status(200).json({
       success: true,
-      message: "Bootcamp retrieved successfully",
       data: bootcamp,
     });
   } catch (error) {
@@ -61,44 +49,59 @@ export const getBootcampById = async (req, res, next) => {
   }
 };
 
-export const updateBootcamp = async (req, res, next) => {
+export const updateStatus = async (req, res, next) => {
   try {
-    const bootcamp = await bootcampService.updateBootcamp(
-      req.params.id,
-      req.body,
+    const { status } = req.body;
+    const updated = await bootcampService.updateBootcampStatus(req.params.id, status);
+    return res.status(200).json({
+      success: true,
+      message: `Bootcamp transitioned to ${status}`,
+      data: updated,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const updateWeights = async (req, res, next) => {
+  try {
+    const updated = await bootcampService.updateWeights(req.params.id, req.body);
+    return res.status(200).json({
+      success: true,
+      message: "Scoring weights updated successfully",
+      data: updated,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getBootcampsByDivision = async (req, res, next) => {
+  try {
+    const { divisionId } = req.params;
+    const bootcamps = await bootcampService.getBootcamps({ divisionId });
+    return res.status(200).json({
+      success: true,
+      data: bootcamps,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const screenApplicant = async (req, res, next) => {
+  try {
+    const { enrollmentId, decision, reason } = req.body;
+    const adminId = req.user.id || req.user.userId;
+    const result = await bootcampService.screenApplicantAction(
+      enrollmentId,
+      decision,
+      adminId,
+      reason
     );
     return res.status(200).json({
       success: true,
-      message: "Bootcamp updated successfully",
-      data: bootcamp,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const updateBootcampStatus = async (req, res, next) => {
-  try {
-    const bootcamp = await bootcampService.updateBootcampStatus(
-      req.params.id,
-      req.body.status,
-    );
-    return res.status(200).json({
-      success: true,
-      message: "Bootcamp status updated successfully",
-      data: bootcamp,
-    });
-  } catch (error) {
-    return next(error);
-  }
-};
-
-export const deleteBootcamp = async (req, res, next) => {
-  try {
-    const result = await bootcampService.deleteBootcamp(req.params.id);
-    return res.status(200).json({
-      success: true,
-      message: "Bootcamp deleted successfully",
+      message: `Applicant screening complete: ${decision}`,
       data: result,
     });
   } catch (error) {

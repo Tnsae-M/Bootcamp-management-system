@@ -1,72 +1,54 @@
 import * as feedbackService from "./feedback.service.js";
 
-// POST /feedback
-export const createFeedback = async (req, res, next) => {
+export const submitSessionFeedback = async (req, res, next) => {
   try {
-    const feedback = await feedbackService.createFeedback(
-      req.body,
-      req.user.userId
-    );
-
-    res.status(201).json({
+    const userId = req.user.id || req.user.userId;
+    const { sessionId, rating, comment } = req.body;
+    const feedback = await feedbackService.submitSessionFeedback({
+      sessionId,
+      userId,
+      rating,
+      comment,
+    });
+    return res.status(201).json({
       success: true,
-      message: "Feedback submitted",
+      message: "Session feedback submitted successfully",
       data: feedback,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
-// GET /feedback/bootcamp/:id
-export const getBootcampFeedback = async (req, res, next) => {
+export const submitPeerReview = async (req, res, next) => {
   try {
-    const viewerRole = String(req.user?.roles?.[0] || '').toUpperCase();
-    const data = await feedbackService.getBootcampFeedback(
-      req.params.id,
-      viewerRole
-    );
-
-    res.status(200).json({
-      success: true,
-      data,
+    const reviewerId = req.user.id || req.user.userId;
+    const { submissionId, revieweeId, rating, comment } = req.body;
+    const review = await feedbackService.submitPeerReview({
+      submissionId,
+      reviewerId,
+      revieweeId,
+      rating,
+      comment,
     });
-  } catch (err) {
-    next(err);
+    return res.status(201).json({
+      success: true,
+      message: "Peer review submitted successfully",
+      data: review,
+    });
+  } catch (error) {
+    return next(error);
   }
 };
 
-// GET /feedback/instructor/:id
-export const getInstructorFeedback = async (req, res, next) => {
+export const getSessionFeedbacks = async (req, res, next) => {
   try {
-    const viewerRole = String(req.user?.roles?.[0] || '').toUpperCase();
-    const data = await feedbackService.getInstructorFeedback(
-      req.params.id,
-      viewerRole
-    );
-
-    res.status(200).json({
+    const feedbacks = await feedbackService.getSessionFeedbacks(req.params.sessionId);
+    return res.status(200).json({
       success: true,
-      data,
+      data: feedbacks,
     });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const getSessionFeedback = async (req, res, next) => {
-  try {
-    const viewerRole = String(req.user?.roles?.[0] || '').toUpperCase();
-    const data = await feedbackService.getSessionFeedback(
-      req.params.id,
-      viewerRole
-    );
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };

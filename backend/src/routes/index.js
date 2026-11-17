@@ -15,6 +15,7 @@ import notificationsRoutes from "../modules/notification/notification.routes.js"
 import groupRoutes from "../modules/groups/group.routes.js";
 import resourceRoutes from "../modules/resources/resource.routes.js";
 import projectRoutes from "../modules/projects/project.routes.js";
+import inductionRoutes from "../modules/induction/induction.routes.js";
 
 import authRoutes from "../modules/auth/auth.routes.js";
 
@@ -45,6 +46,7 @@ router.use("/reports", reportsRoutes);
 
 
 router.use("/groups", groupRoutes);
+router.use("/induction", inductionRoutes);
 router.use("/resources", resourceRoutes);
 router.use("/projects", projectRoutes);
 import auditRoutes from "../modules/audit/activity.routes.js";

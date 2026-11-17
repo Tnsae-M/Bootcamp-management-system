@@ -1,35 +1,38 @@
 import { Router } from "express";
 import {
-  enroll,
+  apply,
   getBootcampEnrollments,
   getMyEnrollments,
-  updateStatus,
 } from "./enrollment.controller.js";
-
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
 const router = Router();
 
-// Admin/instructor/student enrolls a user
-router.post("/", authGuard, enroll);
+// Guest applies to bootcamp
+router.post("/apply", authGuard, apply);
+router.post("/", authGuard, apply);
 
-// Get students in bootcamp
+// Student views own enrollments
+router.get("/me", authGuard, getMyEnrollments);
+
+// Division Admin views applicants and enrolled students for bootcamp
 router.get(
   "/bootcamp/:id",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const bc = await prisma.bootcamp.findUnique({
+        where: { id: req.params.id },
+        select: { divisionId: true },
+      });
+      return bc?.divisionId;
+    },
+  }),
   getBootcampEnrollments
-);
-
-// Student sees their enrollments
-router.get("/me", authGuard, getMyEnrollments);
-
-// Update status (admin)
-router.put(
-  "/:id",
-  authGuard,
-  roleGuard("admin"),
-  updateStatus
 );
 
 export default router;

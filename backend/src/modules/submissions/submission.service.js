@@ -1,4 +1,5 @@
 // Submissions Service - BMS Core Domain Logic
+import prisma from "../../config/prisma.js";
 
 export const buildError = (msg, code = 400) => {
   const err = new Error(msg);
@@ -155,4 +156,125 @@ export const returnSubmission = ({ submission, feedback, instructorId }) => {
     gradedBy: instructorId,
     gradedAt: new Date(),
   };
+};
+
+// ─── Prisma Database Operations ──────────────────────────────────────────────
+
+export const submitTask = async ({ taskId, userId, groupId, payload }) => {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task) throw buildError("Task not found", 404);
+
+  const existingSubmissions = await prisma.submission.findMany({
+    where: {
+      taskId,
+      ...(userId ? { userId } : { groupId }),
+    },
+  });
+
+  const prepared = prepareSubmission({
+    task,
+    payload,
+    userId,
+    groupId,
+    existingSubmissions,
+    now: new Date(),
+  });
+
+  return await prisma.submission.create({
+    data: {
+      taskId: prepared.taskId,
+      userId: prepared.userId,
+      groupId: prepared.groupId,
+      version: prepared.version,
+      fileUrl: prepared.fileUrl,
+      githubUrl: prepared.githubUrl,
+      status: prepared.status,
+      submittedAt: prepared.submittedAt,
+    },
+    include: {
+      task: { select: { id: true, title: true, maxScore: true } },
+      user: { select: { id: true, fullName: true, email: true } },
+    },
+  });
+};
+
+export const gradeSubmission = async (submissionId, gradingData, instructorId) => {
+  const submission = await prisma.submission.findUnique({
+    where: { id: submissionId },
+    include: { task: true },
+  });
+  if (!submission) throw buildError("Submission not found", 404);
+
+  const evaluated = evaluateGrading({
+    submission,
+    task: submission.task,
+    gradingData,
+    instructorId,
+  });
+
+  return await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      score: evaluated.score,
+      feedback: evaluated.feedback,
+      qualFlag: evaluated.qualFlag,
+      status: evaluated.status,
+      gradedBy: evaluated.gradedBy,
+      gradedAt: evaluated.gradedAt,
+    },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+      task: { select: { id: true, title: true, maxScore: true } },
+    },
+  });
+};
+
+export const returnSubmissionForRevision = async (submissionId, feedback, instructorId) => {
+  const submission = await prisma.submission.findUnique({ where: { id: submissionId } });
+  if (!submission) throw buildError("Submission not found", 404);
+
+  const returned = returnSubmission({
+    submission,
+    feedback,
+    instructorId,
+  });
+
+  return await prisma.submission.update({
+    where: { id: submissionId },
+    data: {
+      feedback: returned.feedback,
+      status: returned.status,
+      gradedBy: returned.gradedBy,
+      gradedAt: returned.gradedAt,
+    },
+  });
+};
+
+export const getSubmissionsByTask = async (taskId) => {
+  return await prisma.submission.findMany({
+    where: { taskId },
+    include: {
+      user: { select: { id: true, fullName: true, email: true, universityId: true } },
+      group: { select: { id: true, name: true } },
+    },
+    orderBy: { submittedAt: "desc" },
+  });
+};
+
+export const getMySubmissions = async (userId) => {
+  return await prisma.submission.findMany({
+    where: { userId },
+    include: {
+      task: {
+        select: {
+          id: true,
+          title: true,
+          deadline: true,
+          maxScore: true,
+          bootcamp: { select: { id: true, title: true } },
+        },
+      },
+    },
+    orderBy: { submittedAt: "desc" },
+  });
 };

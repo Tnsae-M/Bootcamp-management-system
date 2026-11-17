@@ -1,104 +1,18 @@
-import User from "../users/user.model.js";
-import { sanitizeUser, USER_POPULATE } from "../users/user.sanitize.js";
+import prisma from "../../config/prisma.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import crypto from "crypto";
-import { sendEmail } from "../../utils/email.js";
 
-const ACCESS_TOKEN_EXPIRES = process.env.JWT_ACCESS_EXPIRES || "15m";
+const ACCESS_TOKEN_EXPIRES = process.env.JWT_ACCESS_EXPIRES || "2h";
 const REFRESH_TOKEN_EXPIRES = process.env.JWT_REFRESH_EXPIRES || "7d";
-
-const createToken = (payload, secret, expiresIn) => {
-  if (!secret) {
-    throw Object.assign(new Error("Missing JWT secret"), { statusCode: 500 });
-  }
-  return jwt.sign(payload, secret, { expiresIn });
-};
-
-const generateTokens = (user) => {
-  const accessToken = createToken(
-    { userId: user._id.toString(), roles: user.roles },
-    process.env.JWT_SECRET,
-    ACCESS_TOKEN_EXPIRES,
-  );
-
-  const refreshToken = createToken(
-    { userId: user._id.toString(), roles: user.roles },
-    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    REFRESH_TOKEN_EXPIRES,
-  );
-
-  return { accessToken, refreshToken };
-};
 
 // Validation helper functions
 const validateEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
- const commonPasswords = [
-    "password",
-    "12345678",
-    "qwerty",
-    "admin",
-    "letmein",
-    "welcome",
-  ];
-const rules=[
-    {
-    fails:(password)=> {return password.length < 8},message:"Password must be at least 8 characters long"},
-    {
-    fails:(password)=> {return password.length>128},message:"Password must not exceed 128 characters"},
-    {
-      fails:(password)=> {return !/[A-Z]/.test(password)},
-      message:"Password must contain at least one uppercase letter"},
-    {
-      fails:(password)=> {return !/[a-z]/.test(password)},message:"Password must contain at least one lowercase letter"},
-    {
-        fails:(password)=> {return !/\d/.test(password)},message:"Password must contain at least one number"},
-    {
-      fails:(password)=> {return !/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)},message:"Password must contain at least one special character"},
-    {
-      fails:(password)=>commonPasswords.some((common) => password.toLowerCase().includes(common)),message:"Password cannot contain common words"}
-  ];
-const validatePassword = (password) => {
-  const errors=rules.filter(r=>r.fails(password)).map(r=>r.message);
-
-  return errors;
-};
-
-const validateName = (name) => {
-  if (name.length < 2) {
-    return "Name must be at least 2 characters long";
-  }
-
-  if (name.length > 50) {
-    return "Name must not exceed 50 characters";
-  }
-
-  if (!/^[a-zA-Z\s\-']+$/.test(name)) {
-    return "Name can only contain letters, spaces, hyphens, and apostrophes";
-  }
-
-  return null;
-};
 
 /**
  * Registers a new user via public sign-up with default GUEST role.
- *
- * Grounded in:
- * - SRS v2.0 Section 3.1 (Public Sign-up creates GUEST)
- * - CONTEXT.md (Actors: Guest)
- *
- * @param {Object} input
- * @param {string} input.fullName
- * @param {string} input.email
- * @param {string} input.password
- * @param {string} [input.universityId]
- * @param {string} [input.department]
- * @param {string} [input.telegramUsername]
- * @param {Object} [deps] - Optional test adapter dependencies
- * @returns {Promise<{ user: Object, tokens: { accessToken: string, refreshToken: string } }>}
  */
 export const registerGuest = async (input, deps = {}) => {
   const { fullName, email, password, universityId, department, telegramUsername } = input;
@@ -109,7 +23,12 @@ export const registerGuest = async (input, deps = {}) => {
     throw error;
   }
 
-  // Password rules validation
+  if (!validateEmail(email)) {
+    const error = new Error("Please provide a valid email address.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   if (password.length < 8) {
     const error = new Error("Password must be at least 8 characters long");
     error.statusCode = 400;
@@ -122,9 +41,18 @@ export const registerGuest = async (input, deps = {}) => {
     throw error;
   }
 
+  const normalizedEmail = email.toLowerCase().trim();
+
   // Check duplicate
   if (deps.db) {
-    const existing = deps.db.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const existing = deps.db.find((u) => u.email.toLowerCase() === normalizedEmail);
+    if (existing) {
+      const error = new Error("Email already exists");
+      error.statusCode = 409;
+      throw error;
+    }
+  } else if (prisma) {
+    const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       const error = new Error("Email already exists");
       error.statusCode = 409;
@@ -135,481 +63,163 @@ export const registerGuest = async (input, deps = {}) => {
   const saltRounds = 10;
   const passwordHash = await bcrypt.hash(password, saltRounds);
 
-  const roleAssignments = [
-    { role: "GUEST", scopeType: "GLOBAL", scopeId: null }
+  const defaultRoleAssignments = [
+    { role: "GUEST", scopeType: "GLOBAL", scopeId: null },
   ];
 
-  const userId = `usr_${Date.now()}`;
-  const newUser = {
-    id: userId,
-    fullName,
-    email: email.toLowerCase(),
-    universityId: universityId || null,
-    department: department || null,
-    telegramUsername: telegramUsername || null,
-    roleAssignments,
-    createdAt: new Date()
-  };
+  let newUser;
 
   if (deps.db) {
+    const userId = `usr_${Date.now()}`;
+    newUser = {
+      id: userId,
+      fullName,
+      email: normalizedEmail,
+      universityId: universityId || null,
+      department: department || null,
+      telegramUsername: telegramUsername || null,
+      roleAssignments: defaultRoleAssignments,
+      createdAt: new Date(),
+    };
     deps.db.push({ ...newUser, passwordHash });
+  } else {
+    newUser = await prisma.user.create({
+      data: {
+        fullName,
+        email: normalizedEmail,
+        passwordHash,
+        universityId: universityId || null,
+        department: department || null,
+        telegramUsername: telegramUsername || null,
+        roleAssignments: {
+          create: {
+            role: "GUEST",
+            scopeType: "GLOBAL",
+          },
+        },
+      },
+      include: {
+        roleAssignments: true,
+      },
+    });
   }
 
+  const userId = newUser.id;
+  const roleAssignments = newUser.roleAssignments || defaultRoleAssignments;
+  const roles = roleAssignments.map((a) => a.role);
+
   const accessToken = jwt.sign(
-    { userId, roleAssignments },
+    { userId, email: normalizedEmail, roles, roleAssignments },
     process.env.JWT_SECRET || "fallback-secret",
-    { expiresIn: "2h" }
+    { expiresIn: ACCESS_TOKEN_EXPIRES }
   );
 
   const refreshToken = jwt.sign(
-    { userId, roleAssignments },
+    { userId, email: normalizedEmail, roles, roleAssignments },
     process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || "fallback-secret",
-    { expiresIn: "7d" }
+    { expiresIn: REFRESH_TOKEN_EXPIRES }
   );
 
+  const { passwordHash: _, passwordResetToken: __, ...sanitized } = newUser;
+
   return {
-    user: newUser,
-    tokens: { accessToken, refreshToken }
+    user: sanitized,
+    tokens: { accessToken, refreshToken },
   };
 };
 
 export const registerUser = async (name, email, password, role) => {
-  if (!name || !email || !password) {
-    throw Object.assign(new Error("Name, email, and password are required."), {
-      statusCode: 400,
-    });
-  }
-
-  // Validate email format
-  if (!validateEmail(email)) {
-    throw Object.assign(new Error("Please provide a valid email address."), {
-      statusCode: 400,
-    });
-  }
-
-  // Validate name
-  const nameError = validateName(name);
-  if (nameError) {
-    throw Object.assign(new Error(nameError), { statusCode: 400 });
-  }
-
-  // Validate password strength
-  const passwordErrors = validatePassword(password);
-  if (passwordErrors.length > 0) {
-    throw Object.assign(
-      new Error(`Password requirements not met:\n${passwordErrors.join("\n")}`),
-      {
-        statusCode: 400,
-      },
-    );
-  }
-
-  const existingUser = await User.findOne({
-    email: email.toLowerCase().trim(),
+  return registerGuest({
+    fullName: name,
+    email,
+    password,
   });
-
-  if (existingUser) {
-    throw Object.assign(new Error("Email is already registered."), {
-      statusCode: 409,
-    });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  //  1. CREATE OTP (6 digits)
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-  //  2. HASH OTP (store this)
-  const hashedToken = crypto.createHash("sha256").update(otp).digest("hex");
-
-  // 3. CREATE USER
-  const user = new User({
-    name,
-    email: email.toLowerCase().trim(),
-    password: hashedPassword,
-    roles: Array.isArray(role)
-      ? role.map((r) => r.toUpperCase())
-      : [role ? role.toUpperCase() : "STUDENT"],
-    isEmailVerified: false,
-    emailVerificationToken: hashedToken,
-    emailVerificationExpires: Date.now() + 15 * 60 * 1000, // 15 minutes
-  });
-
-  await user.save();
-
-  //  4. SEND EMAIL (REAL or Simulation)
-  const verifyURL = `http://localhost:3000/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
-
-  // Always print OTP to console as a fallback
-  console.log("------------------------------------------");
-  console.log(`📧 OTP for ${user.email}: ${otp}`);
-  console.log(`🔗 Verify link: ${verifyURL}`);
-  console.log("------------------------------------------");
-
-  try {
-    await sendEmail({
-      to: user.email,
-      subject: "Verify your email - OTP",
-      text: `Your verification code is: ${otp}. You can also verify by clicking: ${verifyURL}`,
-      html: `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-        <h2 style="color: #3b82f6;">Verify Your Email</h2>
-        <p>Your 6-digit verification code is:</p>
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b; padding: 10px; background: #f1f5f9; display: inline-block; border-radius: 5px;">
-          ${otp}
-        </div>
-        <p style="margin-top: 20px;">Or click the button below:</p>
-        <a href="${verifyURL}" style="display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">Verify Account</a>
-        <p style="font-size: 12px; color: #64748b; margin-top: 20px;">This code will expire in 15 minutes.</p>
-      </div>
-      `,
-    });
-  } catch (emailErr) {
-    console.error(
-      `⚠️  Email delivery failed (SMTP error): ${emailErr.message}`,
-    );
-    console.error("   Check your EMAIL_USER / EMAIL_PASS credentials in .env");
-    // Do NOT re-throw — user was saved, OTP is in console
-  }
-  return sanitizeUser(user);
 };
 
-export const loginUser = async (email, password) => {
+/**
+ * Authenticates user credentials and returns tokens
+ */
+export const loginUser = async (email, password, deps = {}) => {
   if (!email || !password) {
-    throw Object.assign(new Error("Email and password are required."), {
-      statusCode: 400,
+    const err = new Error("Email and password are required.");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+
+  let user;
+  if (deps.db) {
+    user = deps.db.find((u) => u.email.toLowerCase() === normalizedEmail);
+  } else if (prisma) {
+    user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
+      include: { roleAssignments: true },
     });
   }
 
-  // Validate email format
-  if (!validateEmail(email)) {
-    throw Object.assign(new Error("Please provide a valid email address."), {
-      statusCode: 400,
-    });
-  }
-
-  const user = await User.findOne({
-    email: email.toLowerCase().trim(),
-  }).populate(USER_POPULATE);
   if (!user) {
-    throw Object.assign(new Error("Invalid credentials."), { statusCode: 401 });
+    const err = new Error("Invalid credentials.");
+    err.statusCode = 401;
+    throw err;
   }
 
-  if (!user.isEmailVerified) {
-    throw Object.assign(new Error("Please verify your email first"), {
-      statusCode: 403,
-    });
-  }
-  if (user.status !== "active") {
-    throw Object.assign(new Error("Account is not active."), {
-      statusCode: 403,
-    });
+  const isValid = await bcrypt.compare(password, user.passwordHash);
+  if (!isValid) {
+    const err = new Error("Invalid credentials.");
+    err.statusCode = 401;
+    throw err;
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    throw Object.assign(new Error("Invalid credentials."), { statusCode: 401 });
-  }
+  const roleAssignments = user.roleAssignments || [];
+  const roles = roleAssignments.map((a) => a.role);
 
-  const tokens = generateTokens(user);
-  user.refreshToken = tokens.refreshToken;
-  await user.save();
+  const accessToken = jwt.sign(
+    { userId: user.id, email: user.email, roles, roleAssignments },
+    process.env.JWT_SECRET || "fallback-secret",
+    { expiresIn: ACCESS_TOKEN_EXPIRES }
+  );
+
+  const refreshToken = jwt.sign(
+    { userId: user.id, email: user.email, roles, roleAssignments },
+    process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || "fallback-secret",
+    { expiresIn: REFRESH_TOKEN_EXPIRES }
+  );
+
+  const { passwordHash, passwordResetToken, ...sanitized } = user;
 
   return {
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-    user: sanitizeUser(user),
+    user: sanitized,
+    tokens: { accessToken, refreshToken },
   };
 };
 
-export const refreshAuthToken = async (refreshToken) => {
-  if (!refreshToken) {
-    throw Object.assign(new Error("Refresh token is required."), {
-      statusCode: 400,
+/**
+ * Retrieves the current logged in user
+ */
+export const currentUser = async (userId, deps = {}) => {
+  if (!userId) {
+    const err = new Error("User ID is required");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  let user;
+  if (deps.db) {
+    user = deps.db.find((u) => u.id === userId);
+  } else if (prisma) {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roleAssignments: true },
     });
   }
-
-  let payload;
-  try {
-    payload = jwt.verify(
-      refreshToken,
-      process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
-    );
-  } catch (error) {
-    throw Object.assign(new Error("Invalid or expired refresh token."), {
-      statusCode: 401,
-    });
-  }
-
-  const user = await User.findById(payload.userId);
-  if (!user || !user.refreshToken || user.refreshToken !== refreshToken) {
-    throw Object.assign(new Error("Refresh token is invalid."), {
-      statusCode: 401,
-    });
-  }
-
-  const tokens = generateTokens(user);
-  user.refreshToken = tokens.refreshToken;
-  await user.save();
-
-  return {
-    accessToken: tokens.accessToken,
-    refreshToken: tokens.refreshToken,
-  };
-};
-
-export const currentUser = async (userId) => {
-  const user = await User.findById(userId).populate(USER_POPULATE);
-  if (!user) {
-    throw Object.assign(new Error("User not found."), { statusCode: 404 });
-  }
-  return sanitizeUser(user);
-};
-
-// Email verfication
-
-export const verifyEmail = async (token) => {
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-  const user = await User.findOne({
-    emailVerificationToken: hashedToken,
-    emailVerificationExpires: { $gt: Date.now() },
-  });
 
   if (!user) {
-    throw Object.assign(new Error("Invalid or expired token"), {
-      statusCode: 400,
-    });
+    const err = new Error("User not found");
+    err.statusCode = 404;
+    throw err;
   }
 
-  user.isEmailVerified = true;
-  user.emailVerificationToken = undefined;
-  user.emailVerificationExpires = undefined;
-
-  await user.save();
-
-  return { message: "Email verified successfully" };
-};
-
-export const resendVerificationToken = async (email) => {
-  if (!email)
-    throw Object.assign(new Error("Email is required"), { statusCode: 400 });
-
-  const user = await User.findOne({ email: email.toLowerCase().trim() });
-  if (!user)
-    throw Object.assign(new Error("User not found"), { statusCode: 404 });
-  if (user.isEmailVerified)
-    throw Object.assign(new Error("Email already verified"), {
-      statusCode: 400,
-    });
-
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const hashedToken = crypto.createHash("sha256").update(otp).digest("hex");
-
-  user.emailVerificationToken = hashedToken;
-  user.emailVerificationExpires = Date.now() + 15 * 60 * 1000;
-  await user.save();
-
-  const verifyURL = `http://localhost:3000/verify-email?email=${encodeURIComponent(user.email)}&token=${otp}`;
-
-  console.log("------------------------------------------");
-  console.log(`📧 OTP for ${user.email}: ${otp}`);
-  console.log(`🔗 Verify link: ${verifyURL}`);
-  console.log("------------------------------------------");
-
-  try {
-    await sendEmail({
-      to: user.email,
-      subject: "Your new verification code",
-      text: `Your new verification code is: ${otp}. Link: ${verifyURL}`,
-      html: `
-      <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-        <h2 style="color: #3b82f6;">Verify Your Email</h2>
-        <p>Your new 6-digit verification code is:</p>
-        <div style="font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #1e293b; padding: 10px; background: #f1f5f9; display: inline-block; border-radius: 5px;">
-          ${otp}
-        </div>
-        <p style="font-size: 12px; color: #64748b; margin-top: 20px;">This code will expire in 15 minutes.</p>
-      </div>
-      `,
-    });
-  } catch (emailErr) {
-    console.error(
-      `⚠️  Email delivery failed (SMTP error): ${emailErr.message}`,
-    );
-    console.error("   Check your EMAIL_USER / EMAIL_PASS credentials in .env");
-    // Do NOT re-throw — OTP is saved to DB and printed to console
-  }
-
-  return { message: "Verification code resent successfully" };
-};
-
-import { createNotification } from "../notification/notification.service.js";
-
-export const forgotPassword = async (email) => {
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    throw Object.assign(new Error("User not found"), {
-      statusCode: 404,
-    });
-  }
-
-  // Create reset token for the user (admins will use this or just reset it)
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-
-  user.passwordResetToken = hashedToken;
-  user.passwordResetExpires = Date.now() + 60 * 60 * 1000; // 1 hour
-  await user.save();
-
-  // Find all Admins and Super Admins
-  const admins = await User.find({ roles: { $in: ["ADMIN", "SUPER ADMIN"] } });
-
-  // Notify each Admin
-  for (const admin of admins) {
-    await createNotification({
-      recipient: admin._id,
-      type: "SECURITY",
-      title: "Password Reset Request",
-      message: `User ${user.name} (${user.email}) has requested a password reset. Please review and reset their credentials in the User Management section.`,
-      metadata: { userId: user._id, email: user.email },
-    });
-  }
-
-  return {
-    message:
-      "Your request has been sent to the system administrators for verification.",
-  };
-};
-
-export const changePassword = async (userId, currentPassword, newPassword) => {
-  if (!currentPassword || !newPassword) {
-    throw Object.assign(
-      new Error("Current password and new password are required"),
-      { statusCode: 400 },
-    );
-  }
-
-  // Validate new password strength
-  const passwordErrors = validatePassword(newPassword);
-  if (passwordErrors.length > 0) {
-    throw Object.assign(
-      new Error(
-        `New password requirements not met:\n${passwordErrors.join("\n")}`,
-      ),
-      {
-        statusCode: 400,
-      },
-    );
-  }
-
-  // Check if new password is the same as current password
-  if (currentPassword === newPassword) {
-    throw Object.assign(
-      new Error("New password must be different from current password"),
-      { statusCode: 400 },
-    );
-  }
-
-  const user = await User.findById(userId).select("+password");
-  if (!user) {
-    throw Object.assign(new Error("User not found"), { statusCode: 404 });
-  }
-
-  const isMatch = await bcrypt.compare(currentPassword, user.password);
-  if (!isMatch) {
-    throw Object.assign(new Error("Current password is incorrect"), {
-      statusCode: 401,
-    });
-  }
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  await user.save();
-
-  return { message: "Password updated successfully" };
-};
-
-export const adminResetPassword = async (userId, newPassword) => {
-  if (!newPassword) {
-    throw Object.assign(new Error("New password is required"), {
-      statusCode: 400,
-    });
-  }
-
-  // Validate new password strength
-  const passwordErrors = validatePassword(newPassword);
-  if (passwordErrors.length > 0) {
-    throw Object.assign(
-      new Error(`Password requirements not met:\n${passwordErrors.join("\n")}`),
-      {
-        statusCode: 400,
-      },
-    );
-  }
-
-  const user = await User.findById(userId);
-  if (!user) {
-    throw Object.assign(new Error("User not found"), { statusCode: 404 });
-  }
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
-
-  // Notify user that their password was reset
-  await createNotification({
-    recipient: user._id,
-    type: "SECURITY",
-    title: "Password Reset Successful",
-    message:
-      "Your password has been reset by an administrator. Please log in with your new credentials.",
-    channels: { inApp: true, email: true },
-  });
-
-  return { message: `Password for ${user.name} has been reset successfully` };
-};
-
-export const resetPassword = async (token, newPassword) => {
-  if (!newPassword) {
-    throw Object.assign(new Error("New password is required"), {
-      statusCode: 400,
-    });
-  }
-
-  // Validate new password strength
-  const passwordErrors = validatePassword(newPassword);
-  if (passwordErrors.length > 0) {
-    throw Object.assign(
-      new Error(`Password requirements not met:\n${passwordErrors.join("\n")}`),
-      {
-        statusCode: 400,
-      },
-    );
-  }
-
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-
-  if (!user) {
-    throw Object.assign(new Error("Invalid or expired token"), {
-      statusCode: 400,
-    });
-  }
-
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-
-  await user.save();
-
-  return { message: "Password reset successful" };
+  const { passwordHash, passwordResetToken, ...sanitized } = user;
+  return sanitized;
 };

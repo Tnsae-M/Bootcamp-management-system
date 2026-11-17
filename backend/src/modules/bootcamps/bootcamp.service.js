@@ -1,4 +1,5 @@
 // Bootcamps Service - BMS Core Domain Logic
+import prisma from "../../config/prisma.js";
 
 export const BOOTCAMP_STATUSES = {
   DRAFT: "DRAFT",
@@ -148,4 +149,134 @@ export const screenApplicant = ({ enrollment, decision, adminId, reason }) => {
   } else {
     throw buildError(`Invalid screening decision: ${decision}. Must be ACCEPT or REJECT.`, 400);
   }
+};
+
+/**
+ * Prisma Database operations for Bootcamps
+ */
+export const createBootcamp = async (divisionId, payload, startDate, endDate, createdBy) => {
+  validateBootcampDates(startDate, endDate);
+
+  const division = await prisma.division.findUnique({ where: { id: divisionId } });
+  if (!division) throw buildError("Division not found.", 404);
+
+  const weights = {
+    attendance: payload.attendanceWeight ?? 20,
+    individualTask: payload.individualTaskWeight ?? 40,
+    groupMilestone: payload.groupMilestoneWeight ?? 30,
+    peerReview: payload.peerReviewWeight ?? 10,
+  };
+  validateScoringWeights(weights);
+
+  return await prisma.bootcamp.create({
+    data: {
+      divisionId,
+      title: payload.title || payload.name,
+      description: payload.description,
+      startDate: new Date(startDate),
+      endDate: new Date(endDate),
+      attendanceWeight: weights.attendance,
+      individualTaskWeight: weights.individualTask,
+      groupMilestoneWeight: weights.groupMilestone,
+      peerReviewWeight: weights.peerReview,
+      status: "DRAFT",
+    },
+    include: {
+      division: true,
+    },
+  });
+};
+
+export const getBootcamps = async (filters = {}) => {
+  return await prisma.bootcamp.findMany({
+    where: filters,
+    include: {
+      division: true,
+      _count: {
+        select: { enrollments: true, sessions: true, tasks: true },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const getBootcampById = async (id) => {
+  const bootcamp = await prisma.bootcamp.findUnique({
+    where: { id },
+    include: {
+      division: true,
+      sessions: { orderBy: { startTime: "asc" } },
+      tasks: { orderBy: { deadline: "asc" } },
+      groups: { include: { members: { include: { user: true } } } },
+      _count: { select: { enrollments: true } },
+    },
+  });
+  if (!bootcamp) throw buildError("Bootcamp not found.", 404);
+  return bootcamp;
+};
+
+export const updateBootcampStatus = async (id, status) => {
+  const bootcamp = await prisma.bootcamp.findUnique({ where: { id } });
+  if (!bootcamp) throw buildError("Bootcamp not found.", 404);
+
+  const transitioned = transitionBootcampStatus(bootcamp, status);
+
+  return await prisma.bootcamp.update({
+    where: { id },
+    data: { status: transitioned.status },
+    include: { division: true },
+  });
+};
+
+export const updateWeights = async (id, weights) => {
+  const bootcamp = await prisma.bootcamp.findUnique({ where: { id } });
+  if (!bootcamp) throw buildError("Bootcamp not found.", 404);
+
+  const currentWeights = {
+    attendance: bootcamp.attendanceWeight,
+    individualTask: bootcamp.individualTaskWeight,
+    groupMilestone: bootcamp.groupMilestoneWeight,
+    peerReview: bootcamp.peerReviewWeight,
+  };
+
+  updateBootcampWeights({ ...bootcamp, weights: currentWeights }, weights);
+
+  return await prisma.bootcamp.update({
+    where: { id },
+    data: {
+      attendanceWeight: weights.attendance,
+      individualTaskWeight: weights.individualTask,
+      groupMilestoneWeight: weights.groupMilestone,
+      peerReviewWeight: weights.peerReview,
+    },
+  });
+};
+
+export const screenApplicantAction = async (enrollmentId, decision, adminId, reason) => {
+  const enrollment = await prisma.enrollment.findUnique({ where: { id: enrollmentId } });
+  if (!enrollment) throw buildError("Enrollment not found.", 404);
+
+  // Map to screening domain model
+  const screened = screenApplicant({
+    enrollment: {
+      ...enrollment,
+      status: enrollment.status === "APPLICANT" ? "APPLIED" : enrollment.status,
+    },
+    decision,
+    adminId,
+    reason,
+  });
+
+  const nextStatus = screened.status === "ENROLLED" ? "STUDENT" : "APPLICANT_REJECTED";
+
+  return await prisma.enrollment.update({
+    where: { id: enrollmentId },
+    data: {
+      status: nextStatus,
+    },
+    include: {
+      user: true,
+      bootcamp: true,
+    },
+  });
 };

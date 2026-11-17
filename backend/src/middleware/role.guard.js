@@ -4,7 +4,8 @@ import jwt from "jsonwebtoken";
 // so routes list only the minimum role they require. The single edge:
 // SUPER ADMIN can do everything ADMIN can. ADMIN does NOT imply INSTRUCTOR.
 const ROLE_IMPLIES = {
-  "SUPER ADMIN": ["ADMIN"],
+  "SUPER ADMIN": ["ADMIN", "DIVISION_ADMIN"],
+  "SUPER_ADMIN": ["ADMIN", "DIVISION_ADMIN", "SUPER ADMIN"],
 };
 
 const expandRoles = (roles) => {

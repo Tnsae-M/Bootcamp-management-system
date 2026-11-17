@@ -1,4 +1,4 @@
-import Division from "./division.model.js";
+import prisma from "../../config/prisma.js";
 
 const buildError = (message, statusCode) => {
   const error = new Error(message);
@@ -7,61 +7,61 @@ const buildError = (message, statusCode) => {
 };
 
 export const createDivision = async (payload) => {
-  const existingDivision = await Division.findOne({ name: payload.name });
+  const existingDivision = await prisma.division.findUnique({
+    where: { name: payload.name },
+  });
 
   if (existingDivision) {
     throw buildError("Division name already exists.", 409);
   }
-  return await Division.create(payload);
+
+  const slug = payload.slug || payload.name.toLowerCase().replace(/\s+/g, "-");
+
+  return await prisma.division.create({
+    data: {
+      name: payload.name,
+      slug,
+      description: payload.description || null,
+    },
+  });
 };
-//here there will be no filters for now since we have only 6 divisions, but in future if we want to add filters like name or createdAt we can easily add them here.
-export const getDivisions = async (name) => {
-  const filters = {};
-  if (name) {
-    filters.name = { $regex: name, $options: "i" };
-  }
-  const items = await Division.find(filters);
-  return items;
-  
+
+export const getDivisions = async () => {
+  return await prisma.division.findMany({
+    where: { isArchived: false },
+    include: {
+      _count: { select: { bootcamps: true } },
+    },
+    orderBy: { name: "asc" },
+  });
 };
 
 export const getDivisionById = async (divisionId) => {
-  const division = await Division.findById(divisionId);
-  if (!division) {
-    throw buildError("Division not found.", 404);
-  }
+  const division = await prisma.division.findUnique({
+    where: { id: divisionId },
+    include: {
+      bootcamps: {
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+  if (!division) throw buildError("Division not found.", 404);
   return division;
 };
 
 export const updateDivision = async (divisionId, payload) => {
-  const existingDivision = await Division.findById(divisionId);
-  if (!existingDivision) {
-    throw buildError("Division not found.", 404);
-  }
+  const existing = await prisma.division.findUnique({ where: { id: divisionId } });
+  if (!existing) throw buildError("Division not found.", 404);
 
-  if (payload.name) {
-    const duplicate = await Division.findOne({
-      _id: { $ne: divisionId },
-      name: payload.name,
-    });
-
-    if (duplicate) {
-      throw buildError("Another division already uses this name.", 409);
-    }
-  }
-
-  Object.assign(existingDivision, payload);
-  await existingDivision.save();
-
-  return existingDivision;
+  return await prisma.division.update({
+    where: { id: divisionId },
+    data: payload,
+  });
 };
 
 export const deleteDivision = async (divisionId) => {
-  const division = await Division.findById(divisionId);
-  if (!division) {
-    throw buildError("Division not found.", 404);
-  }
-
-  await Division.findByIdAndDelete(divisionId);
-  return { id: divisionId };
+  return await prisma.division.update({
+    where: { id: divisionId },
+    data: { isArchived: true },
+  });
 };

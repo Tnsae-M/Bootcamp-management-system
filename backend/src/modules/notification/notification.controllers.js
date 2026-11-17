@@ -1,40 +1,28 @@
 import * as notificationService from "./notification.service.js";
 
-export const createNotification = async (req, res, next) => {
-    try {
-        const notification = await notificationService.createNotification(req.body);
-        res.status(201).json({
-            success:true,
-            message:"Notification created successfully",
-            notification
-        });
-    } catch (error) {
-        next(error);
-    }
+export const getMyNotifications = async (req, res, next) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const notifications = await notificationService.getUserNotifications(userId);
+    return res.status(200).json({
+      success: true,
+      data: notifications,
+    });
+  } catch (error) {
+    return next(error);
+  }
 };
 
-export const getNotification=async(req,res,next)=>{
-    try{
-        const notification=await notificationService.getNotificationByUser(req.params.id);
-        res.status(200).json({
-            success:true,
-            message:"Notifications fetched successfully",
-            notification
-        });
-    }catch(er){
-        next(er)
-    }
-}
-
-export const markAsRead=async(req,res,next)=>{
-    try{
-        const notification=await notificationService.markAsRead(req.params.id);
-        res.status(200).json({
-            success:true,
-            message:"Notification marked as read",
-            notification
-        })
-    }catch(e){
-        next(e)
-    }
-}
+export const markRead = async (req, res, next) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const result = await notificationService.markAsReadAction(req.params.id, userId);
+    return res.status(200).json({
+      success: true,
+      message: "Notification marked as read",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

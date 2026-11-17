@@ -1,101 +1,65 @@
 import * as groupService from "./group.service.js";
 
-export const createGroupController = async (req, res, next) => {
+export const createGroup = async (req, res, next) => {
   try {
-    const group = await groupService.createGroup(
-      req.body,
-      req.user.userId
-    );
-
-    res.status(201).json({
+    const creatorId = req.user.id || req.user.userId;
+    const { bootcampId, name } = req.body;
+    const group = await groupService.createGroupAction({
+      bootcampId,
+      name,
+      creatorId,
+    });
+    return res.status(201).json({
       success: true,
-      message: "Group created",
+      message: "Group created successfully",
       data: group,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const getGroupsByBootcampController = async (req, res, next) => {
+export const getGroupsByBootcamp = async (req, res, next) => {
   try {
-    const data = await groupService.getGroupsByBootcamp(
-      req.params.bootcampId
-    );
-
-    res.status(200).json({
+    const groups = await groupService.getGroupsByBootcamp(req.params.bootcampId);
+    return res.status(200).json({
       success: true,
-      data,
+      data: groups,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const addMemberController = async (req, res, next) => {
+export const assignLeader = async (req, res, next) => {
   try {
-    const data = await groupService.addMember(
-      req.params.groupId,
-      req.body.userId,
-      req.body.bootcampId
-    );
-
-    res.status(200).json({
+    const actorId = req.user.id || req.user.userId;
+    const { newLeaderId } = req.body;
+    const group = await groupService.assignLeaderAction({
+      groupId: req.params.id,
+      newLeaderId,
+      actorId,
+    });
+    return res.status(200).json({
       success: true,
-      message: "Member added",
-      data,
+      message: "Group leader assigned successfully",
+      data: group,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const removeMemberController = async (req, res, next) => {
+export const addMember = async (req, res, next) => {
   try {
-    const data = await groupService.removeMember(
-      req.params.groupId,
-      req.params.userId
-    );
-
-    res.status(200).json({
+    const { userId } = req.body;
+    const member = await groupService.addMember(req.params.id, userId);
+    return res.status(201).json({
       success: true,
-      message: "Member removed",
-      data,
+      message: "Member added to group",
+      data: member,
     });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const deleteGroupController = async (req, res, next) => {
-  try {
-    const result = await groupService.deleteGroup(req.params.groupId);
-
-    res.status(200).json({
-      success: true,
-      message: "Group deleted",
-      data: result,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const submitProgress = async (req, res, next) => {
-  try {
-    const studentId = req.user.userId;
-    const result = await groupService.submitGroupProgress(req.body, studentId);
-    res.status(201).json(result);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const getGroupProgressLogs = async (req, res, next) => {
-  try {
-    const result = await groupService.getGroupProgress(req.params.groupId);
-    res.status(200).json(result);
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };

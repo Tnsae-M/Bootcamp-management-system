@@ -1,7 +1,4 @@
-import Task from "./task.model.js";
-import Bootcamp from "../bootcamps/bootcamp.model.js";
-import Session from "../sessions/session.model.js";
-import Enrollment from "../enrollments/enrollment.model.js";
+import prisma from "../../config/prisma.js";
 
 const buildError = (msg, code = 400) => {
   const err = new Error(msg);
@@ -98,131 +95,69 @@ export const validateTaskDefinition = (data) => {
   };
 };
 
-//  Create Task
-export const createTask = async (data, user) => {
-  const { bootcampId, sessionId, dueDate } = data;
+export const createTask = async (data) => {
+  const validated = validateTaskDefinition(data);
 
-  const bootcamp = await Bootcamp.findById(bootcampId);
-  if (!bootcamp) throw buildError("Bootcamp not found", 404);
-
-  // Optional session validation
-  if (sessionId) {
-    const session = await Session.findById(sessionId);
-    if (!session) throw buildError("Session not found", 404);
-  }
-
-  // 🚨 Important rule
-  const due = new Date(dueDate);
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-  
-  if (due < now) {
-    throw buildError("Due date cannot be in the past");
-  }
-
-  return await Task.create({
-    ...data,
-    createdBy: user.userId,
+  return await prisma.task.create({
+    data: {
+      bootcampId: validated.bootcampId,
+      type: validated.type,
+      title: validated.title,
+      description: validated.description,
+      instructions: validated.instructions,
+      submissionType: validated.submissionType,
+      deadline: new Date(validated.deadline),
+      maxScore: validated.maxScore,
+      milestoneNumber: validated.milestoneNumber,
+      peerReviewRequired: validated.peerReviewRequired,
+      allowLateSubmission: validated.allowLateSubmission,
+      latePenaltyPercent: validated.latePenaltyPercent,
+      allowResubmission: validated.allowResubmission,
+    },
+    include: {
+      bootcamp: { select: { id: true, title: true } },
+    },
   });
 };
 
-//  Get tasks for bootcamp (ONLY if enrolled)
-export const getTasksByBootcamp = async (bootcampId, userId, roles = []) => {
-  const userRoles = Array.isArray(roles) ? roles : [roles];
-  const isFaculty = userRoles.some(r => 
-    ["ADMIN", "SUPER ADMIN", "INSTRUCTOR"].includes(String(r || "").toUpperCase())
-  );
-
-  if (!isFaculty) {
-    const enrollment = await Enrollment.findOne({
-      userId,
-      bootcampId,
-    });
-
-    if (!enrollment) {
-      throw buildError("You are not enrolled in this bootcamp", 403);
-    }
-  }
-
-  return await Task.find({ bootcampId })
-    .populate("sessionId", "title startTime")
-    .sort({ dueDate: 1 });
+export const getTasks = async (filters = {}) => {
+  return await prisma.task.findMany({
+    where: filters,
+    include: {
+      bootcamp: { select: { id: true, title: true } },
+      _count: { select: { submissions: true } },
+    },
+    orderBy: { deadline: "asc" },
+  });
 };
 
-//  Get single task
-export const getTaskById = async (taskId, userId, roles = []) => {
-  const task = await Task.findById(taskId)
-    .populate("bootcampId", "name")
-    .populate("sessionId", "title");
+export const getTasksByBootcamp = async (bootcampId) => {
+  return await getTasks({ bootcampId });
+};
 
+export const getTaskById = async (id) => {
+  const task = await prisma.task.findUnique({
+    where: { id },
+    include: {
+      bootcamp: true,
+      submissions: {
+        include: { user: true, group: true },
+      },
+    },
+  });
   if (!task) throw buildError("Task not found", 404);
-
-  const userRoles = Array.isArray(roles) ? roles : [roles];
-  const isFaculty = userRoles.some(r => 
-    ["ADMIN", "SUPER ADMIN", "INSTRUCTOR"].includes(String(r || "").toUpperCase())
-  );
-
-  if (!isFaculty) {
-    const enrollment = await Enrollment.findOne({
-      userId,
-      bootcampId: task.bootcampId._id,
-    });
-
-    if (!enrollment) {
-      throw buildError("Access denied", 403);
-    }
-  }
-
   return task;
 };
 
-//  Update task
-export const updateTask = async (taskId, data) => {
-  const task = await Task.findById(taskId);
-  if (!task) throw buildError("Task not found", 404);
-
-  Object.assign(task, data);
-  await task.save();
-
-  return task;
+export const updateTask = async (id, data) => {
+  return await prisma.task.update({
+    where: { id },
+    data,
+  });
 };
 
-//  Delete task
-export const deleteTask = async (taskId) => {
-  const task = await Task.findById(taskId);
-  if (!task) throw buildError("Task not found", 404);
-
-  await Task.findByIdAndDelete(taskId);
-  return { id: taskId };
-};
-
-//  Get all tasks relevant to the user
-export const getAllTasks = async (userId, roles = []) => {
-  const userRoles = (Array.isArray(roles) ? roles : [roles]).map(r => String(r || "").toUpperCase());
-  const isSuperAdmin = userRoles.includes('SUPER ADMIN');
-  const isAdmin = userRoles.includes('ADMIN');
-  const isInstructor = userRoles.includes('INSTRUCTOR');
-
-  if (isSuperAdmin || isAdmin) {
-    return await Task.find({})
-      .populate("bootcampId", "name")
-      .populate("sessionId", "title")
-      .sort({ createdAt: -1 });
-  }
-
-  if (isInstructor) {
-    return await Task.find({ createdBy: userId })
-      .populate("bootcampId", "name")
-      .populate("sessionId", "title")
-      .sort({ createdAt: -1 });
-  }
-
-  // For students, find tasks in all enrolled bootcamps
-  const enrollments = await Enrollment.find({ userId });
-  const bootcampIds = enrollments.map(e => e.bootcampId);
-
-  return await Task.find({ bootcampId: { $in: bootcampIds } })
-    .populate("bootcampId", "name")
-    .populate("sessionId", "title")
-    .sort({ dueDate: 1 });
+export const deleteTask = async (id) => {
+  return await prisma.task.delete({
+    where: { id },
+  });
 };

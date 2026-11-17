@@ -1,25 +1,61 @@
 import { Router } from "express";
 import {
-  markAttendance,
+  openWindow,
+  submitCode,
+  overrideAttendance,
   getSessionAttendance,
   getMyAttendance,
 } from "./attendance.controller.js";
-
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
 const router = Router();
 
-// only instructor marks attendance
-router.post("/", authGuard, roleGuard("INSTRUCTOR"), markAttendance);
+// Student submits code (requires login)
+router.post("/submit", authGuard, submitCode);
+router.post("/", authGuard, submitCode);
 
-// get attendance for a session
-router.get(
-  "/session/:sessionId",
+// Student views own attendance
+router.get("/me", authGuard, getMyAttendance);
+
+// Instructor opens attendance window
+router.post(
+  "/open-window",
   authGuard,
-  getSessionAttendance
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const session = await prisma.session.findUnique({
+        where: { id: req.body.sessionId },
+        select: { bootcampId: true },
+      });
+      return session?.bootcampId;
+    },
+  }),
+  openWindow
 );
 
-// student sees their own attendance
-router.get("/me", authGuard, getMyAttendance);
+// Override attendance record (Instructor or Admin)
+router.post(
+  "/override",
+  authGuard,
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: async (req) => {
+      const session = await prisma.session.findUnique({
+        where: { id: req.body.sessionId },
+        select: { bootcampId: true },
+      });
+      return session?.bootcampId;
+    },
+  }),
+  overrideAttendance
+);
+
+// View attendance summary for session
+router.get("/session/:sessionId", authGuard, getSessionAttendance);
 
 export default router;

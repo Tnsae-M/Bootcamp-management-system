@@ -1,39 +1,65 @@
 import express from "express";
 import * as sessionController from "./session.controller.js";
-import { authGuard, roleGuard } from "../../middleware/role.guard.js";
+import { authGuard } from "../../middleware/role.guard.js";
+import { scopeGuard } from "../../middleware/scope.guard.js";
+import prisma from "../../config/prisma.js";
 
 const router = express.Router();
 
-// create session (only instructor)
-router.post(
-  "/",
-  authGuard,
-  roleGuard(["instructor", "admin"]),
-  sessionController.createSession,
-);
-
-// all sessions
+// List sessions (enrolled students, instructors, admins)
 router.get("/", authGuard, sessionController.getSessions);
+router.get("/:id", authGuard, sessionController.getSessionById);
+router.get("/bootcamp/:bootcampId", authGuard, sessionController.getSessionsByBootcamp);
 
-// sessions by bootcamp
-router.get(
-  "/bootcamp/:bootcampId",
+// Propose session: Requires INSTRUCTOR for target bootcamp
+router.post(
+  "/propose",
   authGuard,
-  sessionController.getSessionsByBootcamp,
+  scopeGuard({
+    requiredRole: "INSTRUCTOR",
+    scopeType: "BOOTCAMP",
+    resolveScopeId: (req) => req.body.bootcampId,
+  }),
+  sessionController.propose
 );
 
+// Approve session: Requires DIVISION_ADMIN for the session's bootcamp division
 router.put(
-  "/:id",
+  "/:id/approve",
   authGuard,
-  roleGuard(["admin", "instructor"]),
-  sessionController.updateSession,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const session = await prisma.session.findUnique({
+        where: { id: req.params.id },
+        include: { bootcamp: true },
+      });
+      return session?.bootcamp?.divisionId;
+    },
+  }),
+  sessionController.approve
 );
 
-router.delete(
-  "/:id",
+// Reject session: Requires DIVISION_ADMIN
+router.put(
+  "/:id/reject",
   authGuard,
-  roleGuard("admin"),
-  sessionController.deleteSession,
+  scopeGuard({
+    requiredRole: "DIVISION_ADMIN",
+    scopeType: "DIVISION",
+    resolveScopeId: async (req) => {
+      const session = await prisma.session.findUnique({
+        where: { id: req.params.id },
+        include: { bootcamp: true },
+      });
+      return session?.bootcamp?.divisionId;
+    },
+  }),
+  sessionController.reject
 );
+
+// Cancel session: Requires INSTRUCTOR or DIVISION_ADMIN
+router.put("/:id/cancel", authGuard, sessionController.cancel);
 
 export default router;

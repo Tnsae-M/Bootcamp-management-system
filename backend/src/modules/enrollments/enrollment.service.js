@@ -1,17 +1,14 @@
-import Enrollment from "./enrollment.model.js";
+import prisma from "../../config/prisma.js";
 import User from "../users/user.model.js";
 import Bootcamp from "../bootcamps/bootcamp.model.js";
+import Enrollment from "./enrollment.model.js";
 import mongoose from "mongoose";
-
 
 const buildError = (message, statusCode = 400) => {
   const err = new Error(message);
   err.statusCode = statusCode;
   return err;
 };
-
-// Enroll user
-
 
 export const enrollUser = async (userId, bootcampId) => {
   const session = await mongoose.startSession();
@@ -27,9 +24,6 @@ export const enrollUser = async (userId, bootcampId) => {
     const existing = await Enrollment.findOne({ userId, bootcampId }).session(session);
     if (existing) throw buildError("Already enrolled", 409);
 
-    // Auto-assign division to user if not already assigned.
-    // Never overwrite an existing division: enrolling cross-division must not
-    // move the user out of their home division (ADR-0003).
     if (bootcamp.divisionId && !user.divisionId) {
       user.divisionId = bootcamp.divisionId;
       await user.save({ session });
@@ -44,53 +38,91 @@ export const enrollUser = async (userId, bootcampId) => {
     session.endSession();
 
     return enrollment[0];
-
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
     throw err;
   }
 };
-// export const enrollUser = async (userId, bootcampId) => {
-//   const user = await User.findById(userId);
-//   if (!user) throw buildError("User not found", 404);
 
-//   if (user.role !== "student") {
-//   throw buildError("Only students can be enrolled", 400);
-// }
+/**
+ * Guest applies to an OPEN bootcamp
+ */
+export const applyToBootcamp = async ({
+  userId,
+  bootcampId,
+  motivation,
+  experience,
+  portfolioUrl,
+}) => {
+  const bootcamp = await prisma.bootcamp.findUnique({ where: { id: bootcampId } });
+  if (!bootcamp) throw buildError("Bootcamp not found", 404);
 
-//   const bootcamp = await Bootcamp.findById(bootcampId);
-//   if (!bootcamp) throw buildError("Bootcamp not found", 404);
+  if (bootcamp.status !== "OPEN") {
+    throw buildError("Applications are not currently open for this bootcamp", 422);
+  }
 
-//   const existing = await Enrollment.findOne({ userId, bootcampId });
-//   if (existing) {
-//     throw buildError("User already enrolled in this bootcamp", 409);
-//   }
+  const existing = await prisma.enrollment.findUnique({
+    where: { userId_bootcampId: { userId, bootcampId } },
+  });
+  if (existing) throw buildError("You have already applied to this bootcamp", 409);
 
-//   return await Enrollment.create({ userId, bootcampId });
-// };
-
-// Get students in a bootcamp
-export const getBootcampEnrollments = async (bootcampId) => {
-  return await Enrollment.find({ bootcampId })
-    .populate("userId", "name email role status")
-    .populate("bootcampId", "name");
+  return await prisma.enrollment.create({
+    data: {
+      userId,
+      bootcampId,
+      status: "APPLICANT",
+      motivation: motivation || null,
+      experience: experience || null,
+      portfolioUrl: portfolioUrl || null,
+    },
+    include: {
+      bootcamp: { select: { id: true, title: true, division: true } },
+    },
+  });
 };
 
-//  Get current user's enrollments
+export const getBootcampEnrollments = async (bootcampId, status) => {
+  const where = { bootcampId };
+  if (status) where.status = status;
+
+  return await prisma.enrollment.findMany({
+    where,
+    include: {
+      user: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          universityId: true,
+          department: true,
+          telegramUsername: true,
+        },
+      },
+    },
+    orderBy: { appliedAt: "desc" },
+  });
+};
+
 export const getMyEnrollments = async (userId) => {
-  return await Enrollment.find({ userId })
-    .populate("bootcampId", "name startDate endDate status");
+  return await prisma.enrollment.findMany({
+    where: { userId },
+    include: {
+      bootcamp: {
+        include: {
+          division: true,
+          _count: { select: { sessions: true, tasks: true } },
+        },
+      },
+      inductionDecision: true,
+    },
+    orderBy: { appliedAt: "desc" },
+  });
 };
 
-//  Update enrollment status
-export const updateEnrollmentStatus = async (id, status) => {
-  const enrollment = await Enrollment.findById(id);
-
-  if (!enrollment) throw buildError("Enrollment not found", 404);
-
-  enrollment.status = status;
-  await enrollment.save();
-
-  return enrollment;
+export const updateEnrollmentStatus = async (enrollmentId, status) => {
+  return await prisma.enrollment.update({
+    where: { id: enrollmentId },
+    data: { status },
+  });
 };

@@ -1,5 +1,5 @@
-import Attendance from "./attendance.model.js";
-import Session from "../sessions/session.model.js";
+import prisma from "../../config/prisma.js";
+import crypto from "crypto";
 
 const buildError = (msg, code = 400) => {
   const err = new Error(msg);
@@ -8,30 +8,20 @@ const buildError = (msg, code = 400) => {
 };
 
 /**
- * Determines a student's attendance status based on the submission timestamp
- * relative to the window open time and expiry.
- *
- * @param {Object} params
- * @param {Date} params.submittedAt
- * @param {Date} params.openedAt
- * @param {number} [params.windowMinutes=30]
- * @param {Date} params.expiresAt
- * @returns {'PRESENT' | 'LATE'}
+ * Determines a student's attendance status based on submission timestamp
  */
 export const determineAttendanceStatus = ({
   submittedAt,
   openedAt,
   windowMinutes = 30,
-  expiresAt
+  expiresAt,
 }) => {
   const submitTime = new Date(submittedAt).getTime();
   const openTime = new Date(openedAt).getTime();
   const expireTime = new Date(expiresAt).getTime();
 
   if (submitTime > expireTime) {
-    const error = new Error("Attendance window has closed");
-    error.statusCode = 422;
-    throw error;
+    throw buildError("Attendance window has closed", 422);
   }
 
   const windowLimit = openTime + windowMinutes * 60 * 1000;
@@ -44,128 +34,197 @@ export const determineAttendanceStatus = ({
 
 /**
  * Validates student code entry and creates an attendance record object.
- *
- * @param {Object} params
- * @param {string} params.sessionId
- * @param {string} params.userId
- * @param {string} params.code - Entered code
- * @param {Date} params.submittedAt
- * @param {Object} params.activeCode - Active code record
- * @param {Object} [params.existingRecord] - Prior attendance record if one exists
- * @returns {Object} Prepared attendance record
  */
-export const verifyAndRecordAttendance = ({
+export const validateAttendanceCodeEntry = ({
   sessionId,
-  userId,
   code,
-  submittedAt,
   activeCode,
-  existingRecord = null
+  studentId,
+  userId,
+  existingRecord = null,
+  submittedAt = new Date(),
 }) => {
+  const effectiveUserId = studentId || userId;
+  const effectiveSessionId = sessionId || activeCode?.sessionId;
+
   if (existingRecord) {
-    const error = new Error("Attendance already recorded for this session");
-    error.statusCode = 409;
-    throw error;
+    throw buildError("Attendance already recorded", 409);
   }
 
-  if (
-    !activeCode ||
-    !activeCode.code ||
-    activeCode.code.trim().toUpperCase() !== String(code).trim().toUpperCase()
-  ) {
-    const error = new Error("Invalid attendance code");
-    error.statusCode = 400;
-    throw error;
+  if (!activeCode || !activeCode.code) {
+    throw buildError("No active attendance window for this session", 422);
+  }
+
+  const normalizedInput = String(code).trim().toUpperCase();
+  const expectedCode = String(activeCode.code).trim().toUpperCase();
+
+  if (normalizedInput !== expectedCode) {
+    throw buildError("Invalid attendance code", 400);
   }
 
   const status = determineAttendanceStatus({
     submittedAt,
     openedAt: activeCode.openedAt,
-    windowMinutes: activeCode.windowMinutes,
-    expiresAt: activeCode.expiresAt
+    windowMinutes: activeCode.windowMinutes || 30,
+    expiresAt: activeCode.expiresAt,
   });
 
   return {
-    sessionId,
-    userId,
+    sessionId: effectiveSessionId,
+    userId: effectiveUserId,
     status,
-    submittedAt: new Date(submittedAt)
+    submittedAt: new Date(submittedAt),
   };
 };
 
+export const verifyAndRecordAttendance = validateAttendanceCodeEntry;
+
 /**
- * Manually overrides an attendance record's status.
- *
- * @param {Object} params
- * @param {Object} params.record - Existing attendance record
- * @param {string} params.newStatus - PRESENT, LATE, ABSENT, or EXCUSED
- * @param {string} [params.note] - Explanation note (mandatory for EXCUSED)
- * @returns {Object} Updated record
+ * Overrides an attendance record (Admin or Instructor manual adjustment)
  */
 export const overrideAttendanceRecord = ({ record, newStatus, note = "" }) => {
   const normalizedStatus = String(newStatus).toUpperCase();
 
   if (normalizedStatus === "EXCUSED" && (!note || note.trim().length === 0)) {
-    const error = new Error("A note is required when marking attendance as EXCUSED");
-    error.statusCode = 400;
-    throw error;
+    throw buildError("A note is required when marking attendance as EXCUSED", 400);
   }
 
   return {
     ...record,
     status: normalizedStatus,
-    overrideNote: note ? note.trim() : null
+    overrideNote: note ? note.trim() : null,
   };
 };
 
-export const markAttendance = async (data) => {
-  const { sessionId, userId, status } = data;
+// ─── Prisma Database Operations ──────────────────────────────────────────────
 
-  if (!sessionId || !userId || !status) {
-    throw buildError("Session ID, User ID, and Status are required", 400);
-  }
+export const openWindow = async (sessionId, instructorId, windowMinutes = 30) => {
+  const session = await prisma.session.findUnique({ where: { id: sessionId } });
+  if (!session) throw buildError("Session not found", 404);
 
-  // 1. Prevent Duplicates
-  const existing = await Attendance.findOne({ sessionId, userId });
-  if (existing) {
-    throw buildError("Attendance record already exists for this student in this session", 409);
-  }
+  // Generate 5-character alphanumeric code
+  const code = crypto.randomBytes(4).toString("hex").toUpperCase().slice(0, 5);
+  const openedAt = new Date();
+  const expiresAt = new Date(openedAt.getTime() + windowMinutes * 60 * 1000);
 
-  // 2. Automated "Late" logic if status is 'present'
-  if (status.toLowerCase() === 'present') {
-    const session = await Session.findById(sessionId);
-    if (session) {
-      const tenMinsAfterStart = new Date(session.startTime.getTime() + 10 * 60 * 1000);
-      if (Date.now() > tenMinsAfterStart.getTime()) {
-        data.status = 'late';
-      }
-    }
-  }
+  const attendanceCode = await prisma.attendanceCode.upsert({
+    where: { sessionId },
+    update: {
+      code,
+      windowMinutes,
+      openedAt,
+      expiresAt,
+    },
+    create: {
+      sessionId,
+      code,
+      windowMinutes,
+      openedAt,
+      expiresAt,
+    },
+  });
 
-  return await Attendance.create(data);
+  return {
+    code: attendanceCode.code,
+    windowMinutes: attendanceCode.windowMinutes,
+    expiresAt: attendanceCode.expiresAt,
+  };
 };
 
-export const updateAttendance = async (id, data) => {
-  const attendance = await Attendance.findById(id);
-  if (!attendance) throw buildError("Record not found", 404);
+export const submitCode = async (sessionId, userId, code) => {
+  const activeCode = await prisma.attendanceCode.findUnique({
+    where: { sessionId },
+  });
 
-  // 3. 24-hour edit window
-  const oneDayInMs = 24 * 60 * 60 * 1000;
-  if (Date.now() - attendance.createdAt.getTime() > oneDayInMs) {
-    throw buildError("Attendance records cannot be modified after 24 hours", 403);
-  }
+  const existingRecord = await prisma.attendanceRecord.findUnique({
+    where: {
+      sessionId_userId: { sessionId, userId },
+    },
+  });
 
-  return await Attendance.findByIdAndUpdate(id, data, { returnDocument: 'after' });
+  const validated = validateAttendanceCodeEntry({
+    code,
+    activeCode,
+    studentId: userId,
+    existingRecord,
+    submittedAt: new Date(),
+  });
+
+  return await prisma.attendanceRecord.create({
+    data: {
+      sessionId,
+      userId,
+      status: validated.status,
+      submittedAt: validated.submittedAt,
+    },
+    include: {
+      user: { select: { id: true, fullName: true, email: true } },
+    },
+  });
 };
 
-export const getAttendanceBySession = async (sessionId) => {
-  return await Attendance.find({ sessionId })
-    .populate("userId", "name email")
-    .populate("markedBy", "name role");
+export const overrideAttendance = async (sessionId, userId, actorId, newStatus, note) => {
+  const record = await prisma.attendanceRecord.findUnique({
+    where: { sessionId_userId: { sessionId, userId } },
+  });
+
+  const updated = overrideAttendanceRecord({
+    record: record || { sessionId, userId },
+    newStatus,
+    note,
+  });
+
+  return await prisma.attendanceRecord.upsert({
+    where: { sessionId_userId: { sessionId, userId } },
+    update: {
+      status: updated.status,
+      overrideNote: updated.overrideNote,
+    },
+    create: {
+      sessionId,
+      userId,
+      status: updated.status,
+      overrideNote: updated.overrideNote,
+    },
+  });
+};
+
+export const getAttendanceSummary = async (sessionId) => {
+  const records = await prisma.attendanceRecord.findMany({
+    where: { sessionId },
+    include: {
+      user: { select: { id: true, fullName: true, email: true, universityId: true } },
+    },
+  });
+
+  const counts = {
+    total: records.length,
+    present: records.filter((r) => r.status === "PRESENT").length,
+    late: records.filter((r) => r.status === "LATE").length,
+    absent: records.filter((r) => r.status === "ABSENT").length,
+    excused: records.filter((r) => r.status === "EXCUSED").length,
+  };
+
+  return {
+    counts,
+    records,
+  };
 };
 
 export const getUserAttendance = async (userId) => {
-  return await Attendance.find({ userId })
-    .populate("sessionId", "title startTime")
-    .populate("bootcampId", "name");
+  return await prisma.attendanceRecord.findMany({
+    where: { userId },
+    include: {
+      session: {
+        select: {
+          id: true,
+          title: true,
+          startTime: true,
+          endTime: true,
+          bootcamp: { select: { id: true, title: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 };

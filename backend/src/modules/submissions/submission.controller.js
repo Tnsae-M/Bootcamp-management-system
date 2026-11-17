@@ -1,87 +1,94 @@
 import * as submissionService from "./submission.service.js";
 
-// POST /submissions
 export const submitTask = async (req, res, next) => {
   try {
-    let submissionData;
-    
-    // Handle both FormData and regular JSON submissions
+    const { taskId, groupId, githubUrl } = req.body;
+    const userId = req.user.id || req.user.userId;
+
+    let fileUrl = null;
     if (req.file) {
-      // File upload case - reconstruct data from FormData
-      submissionData = {
-        taskId: req.body.taskId,
-        type: req.body.type,
-        link: req.body.link,
-        text: req.body.text,
-        fileUrl: req.file ? `/uploads/${req.file.filename}` : null,
-      };
-    } else {
-      // Regular JSON case
-      submissionData = req.body;
+      fileUrl = req.file.path.replace(/\\/g, "/");
     }
 
-    const submission = await submissionService.submitTask(
-      submissionData,
-      req.user.userId
-    );
-
-    res.status(201).json({
-      success: true,
-      message: "Task submitted",
-      data: submission,
+    const result = await submissionService.submitTask({
+      taskId,
+      userId,
+      groupId,
+      payload: {
+        fileUrl: fileUrl || req.body.fileUrl,
+        githubUrl,
+      },
     });
-  } catch (err) {
-    next(err);
+
+    return res.status(201).json({
+      success: true,
+      message: "Task submitted successfully",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
   }
 };
 
-// GET /submissions/me
-export const getMySubmissions = async (req, res, next) => {
-  try {
-    const data = await submissionService.getMySubmissions(
-      req.user.userId
-    );
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// GET /submissions/task/:taskId
-export const getSubmissionsByTask = async (req, res, next) => {
-  try {
-    const data = await submissionService.getSubmissionsByTask(
-      req.params.taskId
-    );
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-// PUT /submissions/:id/grade
 export const gradeSubmission = async (req, res, next) => {
   try {
-    const data = await submissionService.gradeSubmission(
+    const instructorId = req.user.id || req.user.userId;
+    const { score, feedback, qualFlag } = req.body;
+    const result = await submissionService.gradeSubmission(
       req.params.id,
-      req.body,
-      req.user.userId
+      { score: Number(score), feedback, qualFlag },
+      instructorId
     );
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Submission graded",
-      data,
+      message: "Submission graded successfully",
+      data: result,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const returnSubmission = async (req, res, next) => {
+  try {
+    const instructorId = req.user.id || req.user.userId;
+    const { feedback } = req.body;
+    const result = await submissionService.returnSubmissionForRevision(
+      req.params.id,
+      feedback,
+      instructorId
+    );
+    return res.status(200).json({
+      success: true,
+      message: "Submission returned for revision",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getSubmissionsByTask = async (req, res, next) => {
+  try {
+    const submissions = await submissionService.getSubmissionsByTask(req.params.taskId);
+    return res.status(200).json({
+      success: true,
+      data: submissions,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+export const getMySubmissions = async (req, res, next) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const submissions = await submissionService.getMySubmissions(userId);
+    return res.status(200).json({
+      success: true,
+      data: submissions,
+    });
+  } catch (error) {
+    return next(error);
   }
 };

@@ -1,4 +1,5 @@
 // Notifications Service - BMS Core Domain Logic & Telegram Bot Dispatcher
+import prisma from "../../config/prisma.js";
 
 export const buildError = (message, statusCode = 400) => {
   const error = new Error(message);
@@ -115,4 +116,26 @@ export const markNotificationAsRead = (notification) => {
  */
 export const listUnreadNotifications = (notifications = [], userId) => {
   return notifications.filter((n) => n.recipientId === userId && !n.read);
+};
+
+// ─── Prisma Database Operations ──────────────────────────────────────────────
+
+export const getUserNotifications = async (userId) => {
+  return await prisma.notification.findMany({
+    where: { userId },
+    orderBy: { sentAt: "desc" },
+  });
+};
+
+export const markAsReadAction = async (notificationId, userId) => {
+  const notif = await prisma.notification.findUnique({
+    where: { id: notificationId },
+  });
+  if (!notif) throw buildError("Notification not found", 404);
+  if (notif.userId !== userId) throw buildError("Access denied", 403);
+
+  return await prisma.notification.update({
+    where: { id: notificationId },
+    data: { readAt: new Date() },
+  });
 };

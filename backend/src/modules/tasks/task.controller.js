@@ -1,96 +1,68 @@
 import * as taskService from "./task.service.js";
 
-export const getAllTasks = async (req, res, next) => {
-  try {
-    const data = await taskService.getAllTasks(
-      req.user.userId,
-      req.user.roles
-    );
-
-    res.status(200).json({
-      success: true,
-      data,
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
 export const createTask = async (req, res, next) => {
   try {
-    const task = await taskService.createTask(req.body, req.user);
-
-    res.status(201).json({
+    const task = await taskService.createTask(req.body);
+    return res.status(201).json({
       success: true,
-      message: "Task created",
+      message: "Task created successfully",
       data: task,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
-export const getTasksByBootcamp = async (req, res, next) => {
+export const getTasks = async (req, res, next) => {
   try {
-    const data = await taskService.getTasksByBootcamp(
-      req.params.bootcampId,
-      req.user.userId,
-      req.user.roles
-    );
+    const filters = {};
+    if (req.query.bootcampId) filters.bootcampId = req.query.bootcampId;
+    if (req.query.type) filters.type = req.query.type;
 
-    res.status(200).json({
+    const tasks = await taskService.getTasks(filters);
+    return res.status(200).json({
       success: true,
-      data,
+      data: tasks,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
 export const getTaskById = async (req, res, next) => {
   try {
-    const data = await taskService.getTaskById(
-      req.params.id,
-      req.user.userId,
-      req.user.roles
-    );
-
-    res.status(200).json({
+    const task = await taskService.getTaskById(req.params.id);
+    return res.status(200).json({
       success: true,
-      data,
+      data: task,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
 export const updateTask = async (req, res, next) => {
   try {
-    const task = await taskService.updateTask(
-      req.params.id,
-      req.body
-    );
-
-    res.status(200).json({
+    const task = await taskService.updateTask(req.params.id, req.body);
+    return res.status(200).json({
       success: true,
-      message: "Task updated",
+      message: "Task updated successfully",
       data: task,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
 
 export const deleteTask = async (req, res, next) => {
   try {
     const result = await taskService.deleteTask(req.params.id);
-
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
-      message: "Task deleted",
+      message: "Task deleted successfully",
       data: result,
     });
-  } catch (err) {
-    next(err);
+  } catch (error) {
+    return next(error);
   }
 };
