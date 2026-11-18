@@ -223,3 +223,60 @@ export const currentUser = async (userId, deps = {}) => {
   const { passwordHash, passwordResetToken, ...sanitized } = user;
   return sanitized;
 };
+
+/**
+ * Validates a refresh token and issues a new access token
+ */
+export const refreshAccessToken = async (tokenString, deps = {}) => {
+  if (!tokenString) {
+    const err = new Error("Refresh token required");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const secret =
+    process.env.JWT_REFRESH_SECRET ||
+    process.env.JWT_SECRET ||
+    "fallback-secret";
+  let payload;
+  try {
+    payload = jwt.verify(tokenString, secret);
+  } catch (e) {
+    const err = new Error("Invalid or expired refresh token");
+    err.statusCode = 401;
+    throw err;
+  }
+
+  const userId = payload.userId || payload.id;
+  let user;
+  if (deps.db) {
+    user = deps.db.find((u) => u.id === userId);
+  } else if (prisma) {
+    user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roleAssignments: true },
+    });
+  }
+
+  if (!user) {
+    const err = new Error("User associated with token no longer exists");
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const roleAssignments = user.roleAssignments || [];
+  const roles = roleAssignments.map((a) => a.role);
+
+  const accessToken = jwt.sign(
+    { userId: user.id, email: user.email, roles, roleAssignments },
+    process.env.JWT_SECRET || "fallback-secret",
+    { expiresIn: ACCESS_TOKEN_EXPIRES }
+  );
+
+  const { passwordHash, passwordResetToken, ...sanitized } = user;
+
+  return {
+    accessToken,
+    user: sanitized,
+  };
+};

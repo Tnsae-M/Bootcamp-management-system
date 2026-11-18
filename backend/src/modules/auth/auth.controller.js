@@ -2,14 +2,27 @@ import {
   loginUser,
   registerGuest,
   currentUser,
+  refreshAccessToken,
 } from "./auth.service.js";
 import prisma from "../../config/prisma.js";
 import bcrypt from "bcrypt";
+
+const REFRESH_COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax",
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+};
 
 export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     const result = await loginUser(email, password);
+
+    if (result?.tokens?.refreshToken) {
+      res.cookie("refreshToken", result.tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+    }
+
     return res.status(200).json({
       success: true,
       message: "Login successful",
@@ -31,6 +44,11 @@ export const register = async (req, res, next) => {
       department,
       telegramUsername,
     });
+
+    if (result?.tokens?.refreshToken) {
+      res.cookie("refreshToken", result.tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+    }
+
     return res.status(201).json({
       success: true,
       message: "Registration successful. Welcome to CSEC-ASTU BMS!",
@@ -56,9 +74,29 @@ export const myUser = async (req, res, next) => {
 };
 
 export const refresh = async (req, res, next) => {
+  try {
+    const token = req.cookies?.refreshToken || req.body?.refreshToken;
+    const result = await refreshAccessToken(token);
+
+    return res.status(200).json({
+      success: true,
+      message: "Token refreshed successfully",
+      data: result,
+    });
+  } catch (err) {
+    return next(err);
+  }
+};
+
+export const logout = async (req, res) => {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
   return res.status(200).json({
     success: true,
-    message: "Refresh token endpoint active",
+    message: "Logged out successfully",
   });
 };
 

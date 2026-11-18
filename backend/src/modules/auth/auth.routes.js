@@ -1,4 +1,4 @@
-import { login, myUser, refresh, register,verifyEmailController,forgotPasswordController,
+import { login, myUser, refresh, logout, register,verifyEmailController,forgotPasswordController,
     resetPasswordController, changePasswordController, adminResetPasswordController, resendVerification
  } from "./auth.controller.js";
 import { Router } from "express";
@@ -13,6 +13,7 @@ router.post("/register", registerValidation, validate, register);
 router.get("/me", authGuard, myUser);
 router.post("/login", loginValidation, validate, login);
 router.post("/refresh", refresh);
+router.post("/logout", logout);
 router.get("/verify/:token", verifyEmailController);
 // router.post("/forgot-password", forgotPasswordController);
 // router.post("/reset-password/:token", resetPasswordController);
