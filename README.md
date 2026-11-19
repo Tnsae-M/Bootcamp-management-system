@@ -85,6 +85,8 @@ graph TD
 
 ```
 csec-astu-bms-project/
+├── HANDOFF.md                   # Permanent agent session handoff & architectural guide
+├── README.md                    # Project documentation
 ├── backend/
 │   ├── src/
 │   │   ├── app.js               # Express application configuration

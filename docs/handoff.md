@@ -110,3 +110,4 @@ When resuming work on this repository, the next agent should invoke:
 - `diagnosing-bugs` — If any live runtime API connection or database issues occur.
 - `tdd` — When introducing new API endpoints or complex feature slices.
 - `antigravity-guide` — For Antigravity workflow standards and tool ergonomics.
+
