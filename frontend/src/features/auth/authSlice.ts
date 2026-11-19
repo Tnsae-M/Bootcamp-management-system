@@ -12,9 +12,36 @@ interface AuthState {
   isInitializing: boolean;
 }
 
-const rawToken = localStorage.getItem('token');
+const getStorageItem = (key: string): string | null => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+const setStorageItem = (key: string, val: string): void => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.setItem(key, val);
+    } catch {}
+  }
+};
+
+const removeStorageItem = (key: string): void => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      localStorage.removeItem(key);
+    } catch {}
+  }
+};
+
+const rawToken = getStorageItem('token');
 const token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
-const activeRole = localStorage.getItem('activeRole');
+const activeRole = getStorageItem('activeRole');
 
 const initialState: AuthState = {
   user: null,
@@ -80,7 +107,7 @@ const authSlice = createSlice({
     setActiveRole: (state, action: PayloadAction<string>) => {
       const roleUpper = action.payload.toUpperCase();
       state.activeRole = roleUpper;
-      localStorage.setItem('activeRole', roleUpper);
+      setStorageItem('activeRole', roleUpper);
     },
     clearError: (state) => {
       state.error = null;
@@ -88,7 +115,7 @@ const authSlice = createSlice({
     setToken: (state, action: PayloadAction<string>) => {
       state.token = action.payload;
       state.isAuthenticated = true;
-      localStorage.setItem('token', action.payload);
+      setStorageItem('token', action.payload);
     },
   },
   extraReducers: (builder) => {
@@ -108,11 +135,11 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           state.user = user;
           state.token = accessToken;
-          localStorage.setItem('token', accessToken);
+          setStorageItem('token', accessToken);
 
           if (!state.activeRole) {
             state.activeRole = getHighestRole(user.roles);
-            if (state.activeRole) localStorage.setItem('activeRole', state.activeRole);
+            if (state.activeRole) setStorageItem('activeRole', state.activeRole);
           }
         }
       })
@@ -135,11 +162,11 @@ const authSlice = createSlice({
           state.isAuthenticated = true;
           state.user = user;
           state.token = accessToken;
-          localStorage.setItem('token', accessToken);
+          setStorageItem('token', accessToken);
 
           if (!state.activeRole) {
             state.activeRole = getHighestRole(user.roles);
-            if (state.activeRole) localStorage.setItem('activeRole', state.activeRole);
+            if (state.activeRole) setStorageItem('activeRole', state.activeRole);
           }
         }
       })
@@ -157,7 +184,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         if (!state.activeRole && action.payload?.roles) {
           state.activeRole = getHighestRole(action.payload.roles);
-          if (state.activeRole) localStorage.setItem('activeRole', state.activeRole);
+          if (state.activeRole) setStorageItem('activeRole', state.activeRole);
         }
       })
       .addCase(fetchCurrentUser.rejected, (state) => {
@@ -165,8 +192,8 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.user = null;
         state.token = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('activeRole');
+        removeStorageItem('token');
+        removeStorageItem('activeRole');
       })
       // Logout
       .addCase(logout.fulfilled, (state) => {
@@ -181,4 +208,3 @@ const authSlice = createSlice({
 
 export const { setActiveRole, clearError, setToken } = authSlice.actions;
 export default authSlice.reducer;
-
