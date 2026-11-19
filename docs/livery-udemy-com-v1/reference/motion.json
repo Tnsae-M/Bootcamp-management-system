@@ -1,0 +1,832 @@
+{
+ "note": "CSS animations are in styles.css (their @keyframes are listed here too). `animations` says which element runs which; `scripted` are element.animate() calls with real keyframes; `players` are videos and Lottie/Rive players with the file they load; `recorded` are what the page's scripts wrote frame by frame while it loaded and was scrolled (one track per element and property, samples are [ms, value, scrollY]: replay them with the same timing); `classChanges` are classes scripts added or removed, with when and at what scroll; `films` are pictures of each moving thing over one cycle (look at them); `states` picture controls at rest, on hover and on focus; `scrollReveals` are elements the page's scripts watch as they scroll into view (their classes are as they ended up: write a small IntersectionObserver that adds the class the stylesheet keys on).",
+ "keyframes": [
+  {
+   "name": "onetrust-fade-in",
+   "css": "@keyframes onetrust-fade-in { \n  0% { opacity: 0; }\n  100% { opacity: 1; }\n}"
+  },
+  {
+   "name": "ud-loader-spin",
+   "css": "@keyframes ud-loader-spin{0%{transform:rotate(0)}to{transform:rotate(360deg)}}"
+  },
+  {
+   "name": "_fade-in_1qtls_1",
+   "css": "@keyframes _fade-in_1qtls_1{0%{opacity:0}to{opacity:1}}"
+  },
+  {
+   "name": "_expand_1qtls_1",
+   "css": "@keyframes _expand_1qtls_1{0%{transform:scaleY(0)}to{transform:scaleY(1)}}"
+  },
+  {
+   "name": "_reasoning-message-pulse_fw1mi_1",
+   "css": "@keyframes _reasoning-message-pulse_fw1mi_1{0%,to{transform:scale(1)}50%{transform:scale(1.16667)}}"
+  },
+  {
+   "name": "_pop-in_1fmeq_1",
+   "css": "@keyframes _pop-in_1fmeq_1{0%{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}"
+  },
+  {
+   "name": "_shine_1glav_21",
+   "css": "@keyframes _shine_1glav_21{0%{transform:translate(calc(var(--shine-direction)*var(--shine-width)))}40%,to{transform:translate(calc(-1*var(--shine-direction)*100%))}}"
+  },
+  {
+   "name": "_dot-typing_18kxy_1",
+   "css": "@keyframes _dot-typing_18kxy_1{0%{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem 0 0 0 var(--color-purple-150),625.938rem 0 0 0 var(--color-purple-150)}16.667%{box-shadow:623.938rem -.5rem 0 0 var(--color-purple-400),624.938rem 0 0 0 var(--color-purple-150),625.938rem 0 0 0 var(--color-purple-150)}33.333%{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem 0 0 0 var(--color-purple-150),625.938rem 0 0 0 var(--color-purple-150)}50%{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem -.5rem 0 0 var(--color-purple-400),625.938rem 0 0 0 var(--color-purple-150)}66.667%{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem 0 0 0 var(--color-purple-150),625.938rem 0 0 0 var(--color-purple-150)}83.333%{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem 0 0 0 var(--color-purple-150),625.938rem -.5rem 0 0 var(--color-purple-400)}to{box-shadow:623.938rem 0 0 0 var(--color-purple-150),624.938rem 0 0 0 var(--color-purple-150),625.938rem 0 0 0 var(--color-purple-150)}}"
+  },
+  {
+   "name": "_timer-animation_17mfr_1",
+   "css": "@keyframes _timer-animation_17mfr_1{0%{max-inline-size:.75rem}to{max-inline-size:100%}}"
+  }
+ ],
+ "animations": [
+  {
+   "path": "header._container_zg0f7_57 > div._nav_zg0f7_262:nth-of-type(3) > div._popper_1fmeq_26 > div#_R_24dqivbH1_ > div._animation-wrapper_1fmeq_45",
+   "name": "_pop-in_1fmeq_1",
+   "duration": "0.1s",
+   "delay": "0s",
+   "easing": "cubic-bezier(0.2, 0, 0.38, 0.9)",
+   "iterations": "1",
+   "direction": "normal",
+   "fill": "forwards",
+   "section": 1
+  },
+  {
+   "path": "header._container_zg0f7_57 > div._udemy-business_zg0f7_122._desktop-only_zg0f7_31:nth-of-type(6) > div._popper_1fmeq_26 > div#_R_44dqivbH1_ > div._animation-wrapper_1fmeq_45",
+   "name": "_pop-in_1fmeq_1",
+   "duration": "0.1s",
+   "delay": "0s",
+   "easing": "cubic-bezier(0.2, 0, 0.38, 0.9)",
+   "iterations": "1",
+   "direction": "normal",
+   "fill": "forwards",
+   "section": 1
+  },
+  {
+   "path": "div._content-section_1tl9y_56:nth-of-type(1) > div._text-content_1tl9y_70:nth-of-type(1) > div > div._skeleton_1glav_16.ud-text-skeleton > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._content-section_1tl9y_56:nth-of-type(1) > ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(1) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(1) > div:nth-of-type(2) > div._skeleton_1glav_16 > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._content-section_1tl9y_56:nth-of-type(1) > ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(2) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(2) > div:nth-of-type(2) > div._skeleton_1glav_16 > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._content-section_1tl9y_56:nth-of-type(1) > ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(3) > div:nth-of-type(2) > div._skeleton_1glav_16 > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._content-section_1tl9y_56:nth-of-type(1) > ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(4) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "ul._features-grid_1tl9y_97.ud-unstyled-list > li._feature-item_1tl9y_112:nth-of-type(4) > div:nth-of-type(2) > div._skeleton_1glav_16 > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._banner-content_1tl9y_39 > div._content-section_1tl9y_56:nth-of-type(1) > div._cta-section_1tl9y_143:nth-of-type(2) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._banner-content_1tl9y_39 > div._content-section_1tl9y_56:nth-of-type(1) > div._cta-section_1tl9y_143:nth-of-type(2) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div._banner-content_1tl9y_39 > div._image-section_1tl9y_176:nth-of-type(2) > div._image-skeleton_1tl9y_191 > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 4
+  },
+  {
+   "path": "div > div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div > div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(3) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(4) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div > div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1) > div._skeleton_1glav_16:nth-of-type(4) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(1) > div:nth-of-type(1) > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(1) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(1) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(2) > div:nth-of-type(1) > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(2) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(2) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(2) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(3) > div:nth-of-type(1) > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(3) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(3) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(3) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(4) > div:nth-of-type(1) > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(4) > div._skeleton_1glav_16.ud-text-skeleton:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(4) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(1) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(4) > div._skeleton-tags_1iqdf_130:nth-of-type(3) > div._skeleton_1glav_16:nth-of-type(2) > div._shine_1glav_21",
+   "name": "_shine_1glav_21",
+   "duration": "1.2s",
+   "delay": "1.2s",
+   "easing": "linear",
+   "iterations": "infinite",
+   "direction": "normal",
+   "fill": "none",
+   "section": 10
+  },
+  {
+   "path": "div#onetrust-consent-sdk:nth-of-type(3) > div.onetrust-pc-dark-filter.ot-hide:nth-of-type(1)",
+   "name": "onetrust-fade-in",
+   "duration": "0.4s",
+   "delay": "0s",
+   "easing": "ease-in-out",
+   "iterations": "1",
+   "direction": "normal",
+   "fill": "none",
+   "section": -1
+  },
+  {
+   "path": "div#onetrust-consent-sdk:nth-of-type(3) > div#onetrust-pc-sdk:nth-of-type(2)",
+   "name": "onetrust-fade-in",
+   "duration": "0.4s",
+   "delay": "0s",
+   "easing": "ease-in-out",
+   "iterations": "1",
+   "direction": "normal",
+   "fill": "none",
+   "section": -1
+  }
+ ],
+ "scripted": [],
+ "players": [],
+ "scrollReveals": [
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(1) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(2) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(3) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(4) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(5) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(6) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(7) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(8) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(9) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(1)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(2)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(3)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(4)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(5)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(6)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(7)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(8)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div:nth-of-type(2) > section._carousel-container_1wgma_16 > div._viewport_ea4b8_1:nth-of-type(2) > div._slide-container_ea4b8_6 > div._slide_11h0u_1:nth-of-type(9)",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 3
+  },
+  {
+   "path": "div.ud-full-viewport-container:nth-of-type(4) > section > div > div > div",
+   "classes": "",
+   "transition": "all",
+   "section": 6
+  },
+  {
+   "path": "div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(1) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(2) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(3) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(4) > div",
+   "classes": "",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "section > div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(1)",
+   "classes": "testimonials-module-scss-module__o4ILQa__slide _slide_11h0u_1",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "section > div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(2)",
+   "classes": "testimonials-module-scss-module__o4ILQa__slide _slide_11h0u_1",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "section > div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(3)",
+   "classes": "testimonials-module-scss-module__o4ILQa__slide _slide_11h0u_1",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "section > div._carousel-content_iwl36_16:nth-of-type(2) > div._viewport_ea4b8_1:nth-of-type(1) > div._slide-container_ea4b8_6._slide-layout-4-cards_1y1s8_40 > div._slide_11h0u_1:nth-of-type(4)",
+   "classes": "testimonials-module-scss-module__o4ILQa__slide _slide_11h0u_1",
+   "transition": "all",
+   "section": 7
+  },
+  {
+   "path": "div._container_1sojc_1 > section:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(1)",
+   "classes": "",
+   "transition": "all",
+   "section": 8
+  },
+  {
+   "path": "div._container_1sojc_1 > section:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(2)",
+   "classes": "",
+   "transition": "all",
+   "section": 8
+  },
+  {
+   "path": "div._container_1sojc_1 > section:nth-of-type(4) > div > div:nth-of-type(2) > div:nth-of-type(3)",
+   "classes": "",
+   "transition": "all",
+   "section": 8
+  },
+  {
+   "path": "div.ud-color-scheme-light.root-container:nth-of-type(2) > div:nth-of-type(1)",
+   "classes": "",
+   "transition": "all",
+   "section": 0
+  },
+  {
+   "path": "div:nth-of-type(2) > div._viewport_ea4b8_1 > div._slide-container_ea4b8_6 > div._slide_11h0u_1 > div",
+   "classes": "",
+   "transition": "all",
+   "section": 2
+  },
+  {
+   "path": "section._carousel_967vw_16 > div:nth-of-type(2) > div._viewport_ea4b8_1 > div._slide-container_ea4b8_6 > div._slide_11h0u_1",
+   "classes": "_slide_11h0u_1",
+   "transition": "all",
+   "section": 2
+  },
+  {
+   "path": "div.ud-container > div._container_1sojc_1 > section._container_92bln_16:nth-of-type(5) > div._grid_92bln_37:nth-of-type(2) > div:nth-of-type(1)",
+   "classes": "",
+   "transition": "all",
+   "section": 9
+  },
+  {
+   "path": "div.ud-container > div._container_1sojc_1 > section._container_92bln_16:nth-of-type(5) > div._grid_92bln_37:nth-of-type(2) > div:nth-of-type(2)",
+   "classes": "",
+   "transition": "all",
+   "section": 9
+  },
+  {
+   "path": "div.ud-container > div._container_1sojc_1 > section._container_92bln_16:nth-of-type(5) > div._grid_92bln_37:nth-of-type(2) > div:nth-of-type(3)",
+   "classes": "",
+   "transition": "all",
+   "section": 9
+  }
+ ],
+ "recorded": [],
+ "classChanges": [
+  {
+   "path": "div._smart-bar_1e0he_30._smart-bar--yellow_1e0he_130 > div:nth-of-type(1) > div._smart-bar__content_1e0he_83 > div.ud-text-sm > div._content-text_1e0he_102",
+   "added": [
+    "_content-text_1e0he_102"
+   ],
+   "removed": [
+    "undefined"
+   ],
+   "atMs": 1459,
+   "scrollY": 0,
+   "section": 0
+  },
+  {
+   "path": "div._smart-bar_1e0he_30._smart-bar--yellow_1e0he_130 > div:nth-of-type(1) > div._smart-bar__content_1e0he_83 > div.ud-text-sm > div._content-text_1e0he_102",
+   "added": [
+    "undefined"
+   ],
+   "removed": [
+    "_content-text_1e0he_102"
+   ],
+   "atMs": 1473,
+   "scrollY": 0,
+   "section": 0
+  },
+  {
+   "path": "div._smart-bar_1e0he_30._smart-bar--yellow_1e0he_130 > div:nth-of-type(1) > div._smart-bar__content_1e0he_83 > div.ud-text-sm > div._content-text_1e0he_102",
+   "added": [
+    "_content-text_1e0he_102"
+   ],
+   "removed": [
+    "undefined"
+   ],
+   "atMs": 1473,
+   "scrollY": 0,
+   "section": 0
+  }
+ ],
+ "films": [
+  {
+   "file": "reference/motion/films/01-loop-div.jpg",
+   "kind": "loop",
+   "label": "Loop: _shine_1glav_21",
+   "section": "05-div",
+   "element": "div._banner-content_1tl9y_39 > div._image-section_1tl9y_176:nth-of-type(2) > div._image-skeleton_1tl9y_191 > div._skeleton_1glav_16._wrapper_1kjx5_16 > div._shine_1glav_21:nth-of-type(2)",
+   "frameTimesMs": [
+    0,
+    350,
+    480,
+    721,
+    960,
+    1201
+   ]
+  },
+  {
+   "file": "reference/motion/films/02-loop-div.jpg",
+   "kind": "loop",
+   "label": "Loop: _shine_1glav_21",
+   "section": "05-div",
+   "element": "div._content-section_1tl9y_56:nth-of-type(1) > div._text-content_1tl9y_70:nth-of-type(1) > div > div._skeleton_1glav_16.ud-text-skeleton > div._shine_1glav_21",
+   "frameTimesMs": [
+    0,
+    240,
+    480,
+    720,
+    960,
+    1199
+   ]
+  },
+  {
+   "file": "reference/motion/films/03-loop-section.jpg",
+   "kind": "loop",
+   "label": "Loop: _shine_1glav_21",
+   "section": "11-section",
+   "element": "section:nth-of-type(6) > div > div > div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div:nth-of-type(1)",
+   "frameTimesMs": [
+    0,
+    239,
+    479,
+    721,
+    960,
+    1200
+   ]
+  },
+  {
+   "file": "reference/motion/films/04-loop-section.jpg",
+   "kind": "loop",
+   "label": "Loop: _shine_1glav_21",
+   "section": "11-section",
+   "element": "div > div > div._gwg-carousel_1iqdf_30._gwg-carousel--loading_1iqdf_60 > div._skeleton-course-row_1iqdf_147:nth-of-type(2) > div._skeleton-course-card_1iqdf_152:nth-of-type(1)",
+   "frameTimesMs": [
+    0,
+    241,
+    481,
+    720,
+    961,
+    1200
+   ]
+  }
+ ],
+ "states": [
+  {
+   "file": "reference/components/01-button.jpg",
+   "kind": "button",
+   "label": "button button#_R_24dqivb_",
+   "section": "02-header"
+  },
+  {
+   "file": "reference/components/02-nav-link.jpg",
+   "kind": "nav-link",
+   "label": "nav-link a.ud-btn.ud-btn-medium",
+   "section": "02-header"
+  },
+  {
+   "file": "reference/components/03-nav-link.jpg",
+   "kind": "nav-link",
+   "label": "nav-link a#_R_44dqivb_",
+   "section": "02-header"
+  },
+  {
+   "file": "reference/components/04-button.jpg",
+   "kind": "button",
+   "label": "button a.ud-btn.ud-btn-medium",
+   "section": "02-header"
+  },
+  {
+   "file": "reference/components/05-card.jpg",
+   "kind": "card",
+   "label": "card div:nth-of-type(2)",
+   "section": "04-section"
+  },
+  {
+   "file": "reference/components/06-card.jpg",
+   "kind": "card",
+   "label": "card article._card_1p116_16._gray_1p116_69",
+   "section": "08-testimonials"
+  }
+ ],
+ "lottie": []
+}

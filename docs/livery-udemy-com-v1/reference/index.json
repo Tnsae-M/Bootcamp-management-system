@@ -1,0 +1,708 @@
+{
+ "note": "Everything here is the source page as rendered at 1440px, minus its words (filler of the same length). Copy from these files rather than redrawing.",
+ "viewport": 1440,
+ "lang": "en",
+ "sections": [
+  {
+   "file": "sections/01-div.html",
+   "name": "01-div",
+   "tag": "div",
+   "bytes": 1239
+  },
+  {
+   "file": "sections/02-header.html",
+   "name": "02-header",
+   "tag": "header",
+   "bytes": 8575
+  },
+  {
+   "file": "sections/03-div.html",
+   "name": "03-div",
+   "tag": "div",
+   "bytes": 1935
+  },
+  {
+   "file": "sections/04-section.html",
+   "name": "04-section",
+   "tag": "section",
+   "bytes": 8981
+  },
+  {
+   "file": "sections/05-div.html",
+   "name": "05-div",
+   "tag": "div",
+   "bytes": 3773
+  },
+  {
+   "file": "sections/06-section.html",
+   "name": "06-section",
+   "tag": "section",
+   "bytes": 4722
+  },
+  {
+   "file": "sections/07-div.html",
+   "name": "07-div",
+   "tag": "div",
+   "bytes": 2625
+  },
+  {
+   "file": "sections/08-testimonials.html",
+   "name": "08-testimonials",
+   "tag": "section",
+   "bytes": 7202
+  },
+  {
+   "file": "sections/09-section.html",
+   "name": "09-section",
+   "tag": "section",
+   "bytes": 3349
+  },
+  {
+   "file": "sections/10-section.html",
+   "name": "10-section",
+   "tag": "section",
+   "bytes": 6043
+  },
+  {
+   "file": "sections/11-section.html",
+   "name": "11-section",
+   "tag": "section",
+   "bytes": 7216
+  }
+ ],
+ "svgs": [
+  {
+   "file": "reference/assets/svg/001-icon-close.svg",
+   "role": "icon",
+   "width": 20,
+   "height": 20,
+   "label": "Close",
+   "section": "01-div",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/002-icon-header.svg",
+   "role": "icon",
+   "width": 24,
+   "height": 24,
+   "label": null,
+   "section": "02-header",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/003-icon-header.svg",
+   "role": "icon",
+   "width": 20,
+   "height": 20,
+   "label": null,
+   "section": "02-header",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/004-icon-header.svg",
+   "role": "icon",
+   "width": 20,
+   "height": 20,
+   "label": null,
+   "section": "02-header",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.4841 0.2342 293.93)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/005-icon-previous.svg",
+   "role": "icon",
+   "width": 16,
+   "height": 16,
+   "label": "Previous",
+   "section": "04-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/006-icon-next.svg",
+   "role": "icon",
+   "width": 16,
+   "height": 16,
+   "label": "Next",
+   "section": "04-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/007-decoration-div.svg",
+   "role": "decoration",
+   "width": 112,
+   "height": 112,
+   "label": null,
+   "section": "05-div",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(1 0 0)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/008-icon-section.svg",
+   "role": "icon",
+   "width": 16,
+   "height": 16,
+   "label": null,
+   "section": "06-section",
+   "animated": false,
+   "copies": 2,
+   "colors": [
+    "oklch(0.4841 0.2342 293.93)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/009-icon-div.svg",
+   "role": "icon",
+   "width": 16,
+   "height": 16,
+   "label": null,
+   "section": "07-div",
+   "animated": false,
+   "copies": 2,
+   "colors": [
+    "oklch(0.4841 0.2342 293.93)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/010-icon-testimonials.svg",
+   "role": "icon",
+   "width": 48,
+   "height": 48,
+   "label": null,
+   "section": "08-testimonials",
+   "animated": false,
+   "copies": 4,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/011-icon-testimonials.svg",
+   "role": "icon",
+   "width": 16,
+   "height": 16,
+   "label": null,
+   "section": "08-testimonials",
+   "animated": false,
+   "copies": 4,
+   "colors": [
+    "oklch(0.2974 0.0362 281.74)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/012-icon-section.svg",
+   "role": "icon",
+   "width": 20,
+   "height": 20,
+   "label": null,
+   "section": "09-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "oklch(1 0 0)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/013-icon-section.svg",
+   "role": "icon",
+   "width": 14,
+   "height": 14,
+   "label": null,
+   "section": "10-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "rgb(255, 255, 255)",
+    "oklch(0.6276 0.1418 61.45)",
+    "rgba(0, 0, 0, 0)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/014-icon-section.svg",
+   "role": "icon",
+   "width": 14,
+   "height": 14,
+   "label": null,
+   "section": "10-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "rgb(255, 255, 255)",
+    "oklch(0.6276 0.1418 61.45)",
+    "rgba(0, 0, 0, 0)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/015-icon-section.svg",
+   "role": "icon",
+   "width": 14,
+   "height": 14,
+   "label": null,
+   "section": "10-section",
+   "animated": false,
+   "copies": 1,
+   "colors": [
+    "rgb(255, 255, 255)",
+    "oklch(0.6276 0.1418 61.45)",
+    "rgba(0, 0, 0, 0)"
+   ]
+  },
+  {
+   "file": "reference/assets/svg/016-icon-section.svg",
+   "role": "icon",
+   "width": 64,
+   "height": 64,
+   "label": null,
+   "section": "11-section",
+   "animated": false,
+   "copies": 4,
+   "colors": [
+    "oklch(1 0 0)"
+   ]
+  }
+ ],
+ "images": [
+  {
+   "file": "reference/assets/images/005-path-purple.svg",
+   "from": "https://frontends.udemycdn.com/frontends-marketplace-experience/staticx/udemy/images/grow-with-google/path-purple.svg",
+   "bytes": 711,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/006-path-teal.svg",
+   "from": "https://frontends.udemycdn.com/frontends-marketplace-experience/staticx/udemy/images/grow-with-google/path-teal.svg",
+   "bytes": 672,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/007-path-orange.svg",
+   "from": "https://frontends.udemycdn.com/frontends-marketplace-experience/staticx/udemy/images/grow-with-google/path-orange.svg",
+   "bytes": 687,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/008-path-red.svg",
+   "from": "https://frontends.udemycdn.com/frontends-marketplace-experience/staticx/udemy/images/grow-with-google/path-red.svg",
+   "bytes": 696,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/009-ot-persistent-cookie-icon.png",
+   "from": "https://cdn.cookielaw.org/logos/static/ot_persistent_cookie_icon.png",
+   "bytes": 3874,
+   "width": 100,
+   "height": 100
+  },
+  {
+   "file": "reference/assets/images/010-logo-udemy.svg",
+   "from": "https://frontends.udemycdn.com/thesis/react-brand-components/v2/light/logo-udemy.svg",
+   "bytes": 1890,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/011-career-academies-banner.webp",
+   "from": "https://s.udemycdn.com/career-academies/career-academies-banner.png",
+   "bytes": 93452,
+   "width": 1090,
+   "height": 400
+  },
+  {
+   "file": "reference/assets/images/012-generative-ai.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/9Gj6y7OdRKhBmHkgJ9lWV/4589dcd6feb8009798924f70f515b731/generative-ai.png",
+   "bytes": 146144,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/013-certifications.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/5Pyb4XbnD2CBt6TgiSBB8v/26f6893300dadc86519907b854b430de/certifications.png",
+   "bytes": 54402,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/014-data-science.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/6QeCzvTvnqKN6tI18U0Wmg/cebc19b24d374ec1cab549a9c7a93020/data-science.png",
+   "bytes": 100212,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/015-chat-gpt.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/6cHWrhYDsqfm3k3qfR6gTO/04e768400c598dfa316114282b192987/chat-gpt.png",
+   "bytes": 20376,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/016-prompt-engineering.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/q3tO2sZZ2Yac553k4toUk/83f80d69707016415b2c920f783544ee/prompt-engineering.png",
+   "bytes": 71682,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/017-microsoft-excel.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/k1oBUBSt7HkX1MNMZDSmu/847e2f3a8241e5ccfec6d463880a40b9/microsoft-excel.png",
+   "bytes": 70062,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/018-llms.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/1YfP8zHzS2YiM6qZIEKnb5/f9489770caeae8f89a93176bac6f325f/llms.png",
+   "bytes": 29442,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/019-machine-learning.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/2SJtnzA20BNcQYEBhriorE/019b455cc5d0e9cb3857517f7701f0db/machine-learning.png",
+   "bytes": 27594,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/020-ai-agents.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/6mOgmhAwn7Z9aexIaKVm0/d19d702ccf6370c17592ce786aa0fc6d/ai-agents.png",
+   "bytes": 37988,
+   "width": 1024,
+   "height": 1024
+  },
+  {
+   "file": "reference/assets/images/021-volkswagen-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/3E0eIh3tWHNWADiHNBmW4j/3444d1a4d029f283aa7d10ccf982421e/volkswagen_logo.svg",
+   "bytes": 2203,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/022-samsung-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/2pNyDO0KV1eHXk51HtaAAz/090fac96127d62e784df31e93735f76a/samsung_logo.svg",
+   "bytes": 4726,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/023-cisco-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/3YzfvEjCAUi3bKHLW2h1h8/ec478fa1ed75f6090a7ecc9a083d80af/cisco_logo.svg",
+   "bytes": 11403,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/024-vimeo-logo-resized-2.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/23XnhdqwGCYUhfgIJzj3PM/77259d1ac2a7d771c4444e032ee40d9e/vimeo_logo_resized-2.svg",
+   "bytes": 2878,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/025-procter-gamble-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/1UUVZtTGuvw23MwEnDPUr3/2683579ac045486a0aff67ce8a5eb240/procter_gamble_logo.svg",
+   "bytes": 5444,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/026-hewlett-packard-enterprise-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/1GoAicYDYxxRPGnCpg93gi/a8b6190cc1a24e21d6226200ca488eb8/hewlett_packard_enterprise_logo.svg",
+   "bytes": 11198,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/027-citi-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/2tQm6aYrWQzlKBQ95W00G/c7aaf002814c2cde71d411926eceaefa/citi_logo.svg",
+   "bytes": 1904,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/028-ericsson-logo.svg",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/7guDRVYa2DZD0wD1SyxREP/b704dfe6b0ffb3b26253ec36b4aab505/ericsson_logo.svg",
+   "bytes": 4231,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/029-cris-m.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/3RtbxhMUTMftb9PKczSTDW/f383a1effc2975968d2f87d9273c6e9d/cris-m.webp",
+   "bytes": 8834,
+   "width": 240,
+   "height": 240
+  },
+  {
+   "file": "reference/assets/images/030-alvin-lim.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/1Djz6c0gZLaCG5SQS3PgUY/54b6fb8c85d8da01da95cbb94fa6335f/Alvin_Lim.jpeg",
+   "bytes": 78162,
+   "width": 900,
+   "height": 900
+  },
+  {
+   "file": "reference/assets/images/031-william-a-wachlin.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/6dT7xusLHYoOUizXeVqgUk/4317f63fe25b2e07ad8c70cda641014b/William_A_Wachlin.jpeg",
+   "bytes": 28348,
+   "width": 450,
+   "height": 450
+  },
+  {
+   "file": "reference/assets/images/032-ben-c.webp",
+   "from": "https://cms-images.udemycdn.com/96883mtakkm8/1AXU6146N5h3Ti9rGXytFv/4832b694a15fa19c4f0538ee0c71f55a/ben-c.webp",
+   "bytes": 8726,
+   "width": 240,
+   "height": 240
+  },
+  {
+   "file": "reference/assets/images/033-comptia-thumbnail.webp",
+   "from": "https://frontends.udemycdn.com/frontends-homepage/staticx/udemy/images/cert-prep/comptia-thumbnail.png",
+   "bytes": 89660,
+   "width": 1000,
+   "height": 562
+  },
+  {
+   "file": "reference/assets/images/034-aws-thumbnail.webp",
+   "from": "https://frontends.udemycdn.com/frontends-homepage/staticx/udemy/images/cert-prep/aws-thumbnail.png",
+   "bytes": 89464,
+   "width": 1000,
+   "height": 562
+  },
+  {
+   "file": "reference/assets/images/035-pmi-thumbnail.webp",
+   "from": "https://frontends.udemycdn.com/frontends-homepage/staticx/udemy/images/cert-prep/pmi-thumbnail.png",
+   "bytes": 67942,
+   "width": 1000,
+   "height": 562
+  },
+  {
+   "file": "reference/assets/images/036-career-card-cloud-engineer.webp",
+   "from": "https://s.udemycdn.com/career-academies/product-cards/career-card-cloud-engineer.png",
+   "bytes": 50342,
+   "width": 776,
+   "height": 437
+  },
+  {
+   "file": "reference/assets/images/037-career-card-data-scientist.webp",
+   "from": "https://s.udemycdn.com/career-academies/product-cards/career-card-data-scientist.png",
+   "bytes": 20358,
+   "width": 776,
+   "height": 437
+  },
+  {
+   "file": "reference/assets/images/038-career-card-digitalmarketer.webp",
+   "from": "https://s.udemycdn.com/career-academies/product-cards/career-card-digitalmarketer.png",
+   "bytes": 36756,
+   "width": 776,
+   "height": 437
+  },
+  {
+   "file": "reference/assets/images/039-udemy-logo.png",
+   "from": "https://cdn.cookielaw.org/logos/c7d0d27d-e055-4572-8927-d3c994df5f60/b85c39fb-f5de-428d-92c6-cbf7cd8c6b9c/525608f6-6540-490c-8724-59ec595c678a/udemy-logo.png",
+   "bytes": 7382,
+   "width": 388,
+   "height": 176
+  },
+  {
+   "file": "reference/assets/images/040-powered-by-logo.svg",
+   "from": "https://cdn.cookielaw.org/logos/static/powered_by_logo.svg",
+   "bytes": 5445,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/041-ot-close.svg",
+   "from": "https://cdn.cookielaw.org/logos/static/ot_close.svg",
+   "bytes": 651,
+   "width": null,
+   "height": null
+  },
+  {
+   "file": "reference/assets/images/042-google-2x.webp",
+   "from": "https://frontends.udemycdn.com/thesis/icons/google@2x.webp",
+   "bytes": 1964,
+   "width": 126,
+   "height": 128
+  }
+ ],
+ "fonts": [
+  {
+   "family": "Udemy Sans",
+   "weight": "300",
+   "style": "normal",
+   "files": [
+    "assets/fonts/001-udemy-sans-light-v1.woff2"
+   ]
+  },
+  {
+   "family": "Udemy Sans",
+   "weight": "400",
+   "style": "normal",
+   "files": [
+    "assets/fonts/002-udemy-sans-regular-v1.woff2"
+   ]
+  },
+  {
+   "family": "Udemy Sans",
+   "weight": "500",
+   "style": "normal",
+   "files": [
+    "assets/fonts/003-udemy-sans-medium-v1.woff2"
+   ]
+  },
+  {
+   "family": "Udemy Sans",
+   "weight": "700",
+   "style": "normal",
+   "files": [
+    "assets/fonts/004-udemy-sans-bold-v1.woff2"
+   ]
+  }
+ ],
+ "media": [],
+ "icons": [
+  {
+   "rel": "icon",
+   "sizes": "any",
+   "file": null,
+   "from": "https://www.udemy.com/frontends-logged-out-homepage/favicon.ico"
+  },
+  {
+   "rel": "icon",
+   "sizes": "48x48",
+   "file": null,
+   "from": "https://www.udemy.com/favicon.ico?favicon.0b562e08.ico"
+  }
+ ],
+ "cssVars": {},
+ "scripts": [
+  {
+   "file": "reference/scripts/01-fbb0b07adb05b3af.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/fbb0b07adb05b3af.js",
+   "bytes": 42451
+  },
+  {
+   "file": "reference/scripts/02-1c9cf7d18990daca.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/1c9cf7d18990daca.js",
+   "bytes": 118643
+  },
+  {
+   "file": "reference/scripts/03-abc64f572bcbf9b9.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/abc64f572bcbf9b9.js",
+   "bytes": 747646
+  },
+  {
+   "file": "reference/scripts/04-34497477398a74df.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/34497477398a74df.js",
+   "bytes": 40509
+  },
+  {
+   "file": "reference/scripts/05-turbopack-bd3fff35d262108b.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/turbopack-bd3fff35d262108b.js",
+   "bytes": 10708
+  },
+  {
+   "file": "reference/scripts/06-43e751926d2f3378.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/43e751926d2f3378.js",
+   "bytes": 30686
+  },
+  {
+   "file": "reference/scripts/07-3b1c4b7b091ea3c4.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/3b1c4b7b091ea3c4.js",
+   "bytes": 6376
+  },
+  {
+   "file": "reference/scripts/08-56748726dc015067.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/56748726dc015067.js",
+   "bytes": 19399
+  },
+  {
+   "file": "reference/scripts/09-7fd26be8fa662d05.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/7fd26be8fa662d05.js",
+   "bytes": 28209
+  },
+  {
+   "file": "reference/scripts/10-e7f0b729aa965054.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/e7f0b729aa965054.js",
+   "bytes": 120017
+  },
+  {
+   "file": "reference/scripts/11-ee83855d604a1276.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/ee83855d604a1276.js",
+   "bytes": 59177
+  },
+  {
+   "file": "reference/scripts/12-27932058b87710b5.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/27932058b87710b5.js",
+   "bytes": 84095
+  },
+  {
+   "file": "reference/scripts/13-fbf27d339c052b29.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/fbf27d339c052b29.js",
+   "bytes": 329065
+  },
+  {
+   "file": "reference/scripts/14-c94224a47f0c5370.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/c94224a47f0c5370.js",
+   "bytes": 322563
+  },
+  {
+   "file": "reference/scripts/15-13c603a4434a39c0.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/13c603a4434a39c0.js",
+   "bytes": 399919
+  },
+  {
+   "file": "reference/scripts/16-a1fdb3c7aeae9356.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/a1fdb3c7aeae9356.js",
+   "bytes": 59479
+  },
+  {
+   "file": "reference/scripts/17-4b3c39d39cea78ed.js",
+   "from": "https://frontends.udemycdn.com/frontends-logged-out-homepage/_next/static/chunks/4b3c39d39cea78ed.js",
+   "bytes": 11952
+  }
+ ],
+ "libraries": [],
+ "skipped": [
+  {
+   "url": "https://www.udemy.com/frontends-logged-out-homepage/favicon.ico",
+   "reason": "Couldn't be downloaded."
+  },
+  {
+   "url": "https://www.udemy.com/favicon.ico?favicon.0b562e08.ico",
+   "reason": "Couldn't be downloaded."
+  }
+ ],
+ "notes": [
+  "scripts after 17 were left out (over 3 MB of code)"
+ ]
+}

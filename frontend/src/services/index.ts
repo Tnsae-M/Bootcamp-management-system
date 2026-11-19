@@ -30,7 +30,9 @@ export const feedbackService = {
 
 export const resourcesService = {
   getResources: async (sessionId?: string, bootcampId?: string): Promise<any[]> => {
-    const params = { session: sessionId, bootcamp: bootcampId };
+    const params: any = {};
+    if (sessionId) params.session = sessionId;
+    if (bootcampId) params.bootcamp = bootcampId;
     const res: any = await apiClient.get('/resources', { params });
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.resources || [];
@@ -55,3 +57,22 @@ export const projectsService = {
   },
 };
 
+export const progressService = {
+  getMyProgress: async (bootcampId: string): Promise<{
+    attendanceRate: number;
+    taskCompletionRate: number;
+    avgScore: number;
+    overallProgress: number;
+  }> => {
+    const res: any = await apiClient.get(`/progress/${bootcampId}/me`);
+    return res.data ?? res;
+  },
+};
+
+export const auditService = {
+  getActivities: async (limit?: number): Promise<any[]> => {
+    const res: any = await apiClient.get('/audit', { params: { limit: limit || 25 } });
+    const data = res.data ?? res;
+    return Array.isArray(data) ? data : data?.activities || [];
+  },
+};

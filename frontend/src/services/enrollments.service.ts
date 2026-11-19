@@ -8,19 +8,24 @@ export const enrollmentsService = {
     return Array.isArray(data) ? data : data?.enrollments || [];
   },
 
-  getBootcampEnrollments: async (bootcampId: string): Promise<Enrollment[]> => {
-    const res: any = await apiClient.get(`/bootcamps/${bootcampId}/enrollments`);
+  getBootcampEnrollments: async (bootcampId: string, status?: string): Promise<Enrollment[]> => {
+    const params = status ? { status } : {};
+    const res: any = await apiClient.get(`/enrollments/bootcamp/${bootcampId}`, { params });
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.enrollments || [];
   },
 
-  createEnrollment: async (payload: { bootcampId: string; divisionId?: string }): Promise<Enrollment> => {
-    const res: any = await apiClient.post(`/bootcamps/${payload.bootcampId}/apply`, payload);
+  createEnrollment: async (payload: {
+    bootcampId: string;
+    motivation?: string;
+    experience?: string;
+    portfolioUrl?: string;
+  }): Promise<Enrollment> => {
+    const res: any = await apiClient.post('/enrollments/apply', payload);
     return res.data ?? res;
   },
 
-  screenApplicant: async (enrollmentId: string, status: string, note?: string): Promise<any> => {
-    return apiClient.put(`/enrollments/${enrollmentId}/screen`, { status, note });
+  screenApplicant: async (bootcampId: string, payload: { enrollmentId: string; status: string; note?: string }): Promise<any> => {
+    return apiClient.post(`/bootcamps/${bootcampId}/screen`, payload);
   },
 };
-

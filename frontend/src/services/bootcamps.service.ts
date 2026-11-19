@@ -20,7 +20,7 @@ export const bootcampsService = {
   },
 
   createBootcamp: async (divisionId: string, data: any): Promise<Bootcamp> => {
-    const res: any = await apiClient.post(`/divisions/${divisionId}/bootcamps`, data);
+    const res: any = await apiClient.post(`/bootcamps`, { ...data, divisionId });
     return res.data ?? res;
   },
 
@@ -29,8 +29,17 @@ export const bootcampsService = {
     return res.data ?? res;
   },
 
+  updateStatus: async (id: string, status: string): Promise<Bootcamp> => {
+    const res: any = await apiClient.put(`/bootcamps/${id}/status`, { status });
+    return res.data ?? res;
+  },
+
+  updateWeights: async (id: string, weights: any): Promise<Bootcamp> => {
+    const res: any = await apiClient.put(`/bootcamps/${id}/weights`, weights);
+    return res.data ?? res;
+  },
+
   applyForBootcamp: async (bootcampId: string, payload?: any): Promise<any> => {
-    return apiClient.post(`/bootcamps/${bootcampId}/apply`, payload || {});
+    return apiClient.post('/enrollments/apply', { bootcampId, ...payload });
   },
 };
-
