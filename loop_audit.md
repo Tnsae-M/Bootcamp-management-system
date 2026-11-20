@@ -7,6 +7,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 ## Candidates for Replacement
 
 ### 1. `validatePassword` — serial if/push accumulator
+
 | | |
 |---|---|
 | **File** | [`auth.service.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/modules/auth/auth.service.js#L40-L83) |
@@ -15,6 +16,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Best fit** | **`filter`** (or `flatMap`) — define a rules array of `{ test, message }` objects, then `rules.filter(r => !r.test(password)).map(r => r.message)`. Eliminates the mutable accumulator entirely. |
 
 ### 2. `forgotPassword` — notify each admin
+
 | | |
 |---|---|
 | **File** | [`auth.service.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/modules/auth/auth.service.js#L398-L406) |
@@ -23,6 +25,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Best fit** | **`map` + `Promise.all`** — `await Promise.all(admins.map(admin => createNotification({...})))`. Sends notifications concurrently instead of sequentially, and removes the loop. |
 
 ### 3. `createGroup` — validate each member is enrolled
+
 | | |
 |---|---|
 | **File** | [`group.service.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/modules/groups/group.service.js#L17-L26) |
@@ -31,6 +34,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Best fit** | **`map` + `Promise.all`** for the DB lookups, then **`filter`** to find un-enrolled users and throw once. This would batch the queries concurrently. |
 
 ### 4. `seedAll` — drop indexes for each model
+
 | | |
 |---|---|
 | **File** | [`seedAll.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/seedAll.js#L47-L54) |
@@ -39,6 +43,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Best fit** | **`map` + `Promise.allSettled`** — `await Promise.allSettled(collectionsToClear.map(m => m.collection.dropIndexes()))`, then log results. Concurrent + no try/catch needed per item. |
 
 ### 5. `listUsers` — forEach to log each user
+
 | | |
 |---|---|
 | **File** | [`listUsers.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/scripts/listUsers.js#L14-L16) |
@@ -52,6 +57,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 ## Should NOT Change (loop is clearer / can't be replaced)
 
 ### 6. `expandRoles` — nested for-of to build a Set
+
 | | |
 |---|---|
 | **File** | [`role.guard.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/middleware/role.guard.js#L10-L18) |
@@ -61,6 +67,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Verdict** | ✅ **Keep as-is.** |
 
 ### 7. `fixRoles` — for-of with conditional DB update + counter
+
 | | |
 |---|---|
 | **File** | [`fixRoles.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/scripts/fixRoles.js#L15-L39) |
@@ -70,6 +77,7 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Verdict** | ✅ **Keep as-is.** |
 
 ### 8. `addMember` — single `.push()` on a Mongoose doc array
+
 | | |
 |---|---|
 | **File** | [`group.service.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/modules/groups/group.service.js#L61) |
@@ -79,7 +87,9 @@ Scanned: all `.js` files under `backend/` (src, scripts, seedAll.js).
 | **Verdict** | ✅ **Keep as-is** (not a loop). |
 
 ### 9. `validatePassword` `errors.push()` calls — independent if/push (detail)
+
 | | |
+|---|---|
 |---|---|
 | **File** | [`auth.service.js`](file:///c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend/src/modules/auth/auth.service.js#L40-L83) |
 | **Note** | Already listed as **Candidate #1** above. Mentioning here because someone might argue the sequential `if/push` reads fine as-is. It does, but the duplication is real — six near-identical blocks differ only in the regex and the message string. A data-driven `filter` version is both shorter and easier to extend with new rules. |

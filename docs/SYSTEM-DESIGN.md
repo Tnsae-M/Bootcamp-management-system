@@ -509,7 +509,7 @@ model AuditLog {
 Each module follows the shape: `routes → controller → service → (Prisma)`.  
 The service is the **deep module** — it owns all business logic, validation rules, and cross-cutting concerns. Controllers are thin (parse HTTP, call service, serialize response). Routes are declarative.
 
-```
+```text
 backend/src/
 ├── app.js                     # Express app factory (no globals)
 ├── server.js                  # Entry point: binds port, starts Telegram bot
@@ -751,7 +751,7 @@ router.patch(
 
 **Hierarchy (encoded once in `scope.guard.js`):**
 
-```
+```text
 SUPER_ADMIN → (admits everywhere)
 DIVISION_ADMIN → (admits for their Division and its child Bootcamps)
 INSTRUCTOR → (admits for their assigned Bootcamp)
@@ -765,7 +765,7 @@ GUEST → (admits only public endpoints)
 
 ## 7. Frontend Module Map
 
-```
+```text
 frontend/src/
 ├── main.tsx
 ├── App.tsx                    # Router root

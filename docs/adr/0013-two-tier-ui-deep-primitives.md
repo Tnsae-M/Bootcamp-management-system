@@ -3,6 +3,7 @@
 Status: accepted
 
 We decided to structure the frontend component layer into a **Two-Tier Deep Module Architecture**:
+
 1. **Tier 1 (Base UI Primitives — `src/components/ui/*`):** Atomic, headless-backed controls (`button`, `input`, `textarea`, `modal`, `card`, `skeleton`, `form-field`, `empty-state`) wrapping Radix UI and Tailwind CSS v4.
 2. **Tier 2 (Deep Domain Primitives — `src/components/common/*`):** High-leverage domain abstractions (`PageHeader`, `StatusBadge`, `StatGrid`, `DataTable`) that encapsulate styling, icons, and status mappings.
 

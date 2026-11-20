@@ -12,7 +12,7 @@ The CSEC-ASTU Bootcamp Management System (BMS) manages complex academic operatio
 
 This improvement plan applies the structural elegance, craft details, neutral depth, and conversational directness of the **Udemy design kit (Livery v1)** while preserving **CSEC-ASTU's core brand identity** (Electric Blue `#2563eb` / `#3b82f6`).
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │                        CSEC-ASTU BRAND IDENTITY                         │
 │           Primary Brand Accent: Electric Blue (#2563eb / #3b82f6)      │
@@ -172,6 +172,7 @@ Per **ADR-0013**, the two-tier component seam is strictly maintained. Upgrades a
 ### 4.1 Tier 1 Base UI Primitives (`src/components/ui/*`)
 
 #### 1. Button (`src/components/ui/button.tsx`)
+
 - **Corners:** Standardized to `8px` (`rounded-[8px]`).
 - **Variants:**
   - `primary`: Background `var(--primary)`, text white, 250ms transition. Hover: `var(--primary-hover)`.
@@ -181,12 +182,14 @@ Per **ADR-0013**, the two-tier component seam is strictly maintained. Upgrades a
 - **Rules:** Never use all-caps text on buttons. Always short nouns or action verbs (2 words).
 
 #### 2. Card (`src/components/ui/card.tsx`)
+
 - **Background:** `var(--surface)` (clean dark `#121826` in dark mode).
 - **Border:** `1px solid var(--border)`.
 - **Radius:** `rounded-[16px]` or `rounded-[8px]`.
 - **Elevation:** Neutral shadow `var(--shadow-soft)`. Hover state: transition `var(--shadow-card)` and subtle border highlight (250ms ease).
 
 #### 3. Form Field & Input (`src/components/ui/input.tsx`)
+
 - **Radius:** `rounded-[8px]`.
 - **Border:** `1px solid var(--border)`.
 - **Focus State:** 2px solid `:focus-visible` ring using `var(--primary)` without fuzzy multi-color glows.
@@ -196,6 +199,7 @@ Per **ADR-0013**, the two-tier component seam is strictly maintained. Upgrades a
 ### 4.2 Tier 2 Deep Domain Primitives (`src/components/common/*`)
 
 #### 1. StatusBadge (`src/components/common/StatusBadge.tsx`)
+
 - Encapsulates 18 domain statuses (`PRESENT`, `LATE`, `ACTIVE`, `INDUCTED`, etc.).
 - **Style:** Compact pill (`rounded-[4px]`), subtle background (10% opacity), crisp text with matching icon.
 - **Example:**
@@ -204,12 +208,14 @@ Per **ADR-0013**, the two-tier component seam is strictly maintained. Upgrades a
   - `PENDING`: Amber background tint + amber text + Clock icon.
 
 #### 2. StatGrid (`src/components/common/StatGrid.tsx`)
+
 - Standardized KPI cards for dashboard metrics.
 - Card padding: `24px` on desktop, `16px` on mobile.
 - Typography: Label at `14px` weight 400 (`text-muted`), metric number at `28px` weight 600 (`text-main`).
 - Subtle trend indicator (`+12% vs last cohort`).
 
 #### 3. PageHeader (`src/components/common/PageHeader.tsx`)
+
 - Title in sentence case (e.g. *"Bootcamp sessions"* rather than *"Bootcamp Sessions Overview"*).
 - Direct subtitle under 14 words.
 - Unified action slot (e.g. single primary action button *"Create session"*).
@@ -220,7 +226,7 @@ Per **ADR-0013**, the two-tier component seam is strictly maintained. Upgrades a
 
 Adopting the measured rhythm from `layout.md`:
 
-```
+```text
 ┌────────────────────────────────────────────────────────────────────────┐
 │ NAVBAR: 72px Fixed / Sticky Header                                     │
 │ Logo | Active Role Switcher | Search | Notification Bell | User Avatar │
@@ -242,6 +248,7 @@ Adopting the measured rhythm from `layout.md`:
 ```
 
 ### Strict Spacing Scale (4px Grid):
+
 - **4px (`gap-1` / `p-1`):** Micro-spacing between icon and badge label.
 - **8px (`gap-2` / `p-2`):** Button inner padding (vertical), tag margins.
 - **12px (`gap-3` / `p-3`):** Nav link horizontal padding, input padding.
@@ -254,6 +261,7 @@ Adopting the measured rhythm from `layout.md`:
 ## 6. Level 4: Motion, Micro-Interactions & Craft Details
 
 ### 6.1 Transition Rules (`motion.md`)
+
 - **Default Transition Duration:** Exactly **250ms** (`transition-all duration-250 ease`).
 - **Maximum Duration:** Never exceed 300ms. Slower animations feel heavy and sluggish in productivity tools.
 - **Animated Properties:** `background-color`, `border-color`, `color`, `opacity`, `transform`, `box-shadow`.
@@ -261,6 +269,7 @@ Adopting the measured rhythm from `layout.md`:
 - **Reduced Motion:** Always respect `@media (prefers-reduced-motion: reduce)` by disabling transitions.
 
 ### 6.2 Signature Float Animation
+
 For prominent focal elements—such as the **Active Session Live PIN Banner** or the **Student Induction Decision Badge**—apply the signature gentle float animation:
 
 ```css
@@ -282,6 +291,7 @@ For prominent focal elements—such as the **Active Session Live PIN Banner** or
 The LMS copy will be shifted from formal university terminology to direct, conversational, and active instructions per `voice.md`.
 
 ### Core Writing Principles:
+
 1. **Sentence Case Everywhere:** Write *"Create session"*, not *"Create Session"*.
 2. **Sentences Around 10 Words:** Avoid run-on academic clauses.
 3. **Address the Reader as "You":** Active and empowering.
@@ -318,15 +328,19 @@ flowchart LR
    - Update CSS variables for neutral dark mode `#090d16` / `#202230`, `#3d4055` borders.
    - Retain `--primary: #2563eb / #3b82f6` for CSEC brand identity.
    - Configure 8px default radii and un-tinted neutral shadows.
+
 2. **Phase 2: Tier 1 Base UI Primitives (`src/components/ui/*`)**
    - Refactor `button.tsx`, `card.tsx`, `input.tsx`, `modal.tsx`.
    - Implement ghost, outline, and primary button styling.
+
 3. **Phase 3: Tier 2 Deep Domain Primitives (`src/components/common/*`)**
    - Refactor `StatusBadge.tsx` with 4px pill styling and desaturated tints.
    - Refactor `StatGrid.tsx` and `PageHeader.tsx` for clean rhythm and sentence-case.
+
 4. **Phase 4: Layout & Rhythm (`src/components/layout/*`)**
    - Standardize navbar height to 72px, container max-width to 1340px.
    - Implement 250ms transitions and signature float on PIN modal and induction banner.
+
 5. **Phase 5: Voice & Copy Polish**
    - Update labels, empty states, and modal descriptions across Student, Instructor, Admin, and Guest portals to direct ~10-word copy.
 
@@ -335,9 +349,9 @@ flowchart LR
 ## 9. Verification & Quality Gates
 
 Each phase must pass the following verification checks:
+
 - [ ] **Typecheck:** `npm run lint` (`tsc --noEmit`) passes with exit code 0.
 - [ ] **Unit Tests:** Frontend Vitest suite (`npm test`) passes 100% (13/13).
 - [ ] **Production Build:** `npm run build` succeeds without bundle or chunk errors.
 - [ ] **Contrast Verification:** Text contrast meets WCAG AA (4.5:1 for body, 3:1 for headers and UI borders).
 - [ ] **ADR Conformance:** Tier 1 and Tier 2 architecture remains unviolated; page files remain lean.
-

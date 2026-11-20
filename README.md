@@ -18,6 +18,7 @@ BMS streamlines the operation of intensive multi-track bootcamps, enables crypto
 ## 🌟 Key Features
 
 ### 🎓 1. Multi-Track Specializations
+
 - Division-scoped curriculum tracks:
   - **Competitive Programming:** ICPC problem-solving, algorithms, graph theory, dynamic programming.
   - **Cybersecurity & Defense:** Network security, web pentesting, cryptography, reverse engineering, CTF drills.
@@ -25,25 +26,31 @@ BMS streamlines the operation of intensive multi-track bootcamps, enables crypto
   - **Applied AI & Data Science:** Machine learning foundations, neural networks, data pipelines, model evaluation.
 
 ### ⏱️ 2. Dynamic Time-Sensitive Attendance PINs
+
 - Instructors launch 10–15 minute attendance windows directly from their teaching portal.
 - Generates a live, time-limited verification code.
 - Students check in from desktop or mobile; verified attendances update induction scores immediately with audit timestamps.
 
 ### 📊 3. 4-Signal Induction Calculation Engine
+
 Transparent evaluation index calculated against the official CSEC division induction threshold ($\ge 75\%$ aggregate index):
+
 1. **Attendance Integrity (30% default weight):** Validated presence across official scheduled sessions.
 2. **Task Rigor & Turn-in (40% default weight):** On-time submission of lab problem sets.
 3. **Grading Mastery (Average Score):** Mean points awarded by instructors during code review.
 4. **Capstone Milestones & Peer Review (20% + 10% weights):** Collaborative project deliverables and peer evaluations.
 
 ### 🛡️ 4. Role-Partitioned Portals & Role Switcher
+
 Partitioned portals under `/dashboard/:role/*` backed by canonical route guards and dynamic role switching for multi-role users:
+
 - **Guest Portal (`/dashboard/guest/*`):** Browse open cohorts across divisions, submit application statements, track screening outcomes, and manage profile settings.
 - **Student Portal (`/dashboard/student/*`):** Learning dashboard, quick attendance PIN input, enrolled bootcamps, session schedule, GitHub deliverable submissions, 4-signal progress index, and capstone groups.
 - **Instructor Portal (`/dashboard/instructor/*`):** Teaching hub, schedule sessions, launch attendance PIN windows, author assignments, grading queue with rubric criteria, attendee roster with absence overrides, and resource sharing.
 - **Admin Portal (`/dashboard/admin/*`):** Global system metrics, division management, cohort launcher with 6-stage lifecycle transitions, user RBAC governance, candidate screening, cohort graduation audits, and immutable security event logs.
 
 ### 🔐 5. Hybrid Authentication Architecture
+
 - **Short-Lived Access Tokens:** Kept in memory via Redux Toolkit.
 - **HttpOnly Refresh Cookies:** Protected with `SameSite=Lax` and `HttpOnly` flags, safeguarding against XSS.
 - **Silent Refresh Queue:** Automatic token refresh on 401 API responses with concurrency request queuing.
@@ -83,7 +90,7 @@ graph TD
 
 ## 📂 Repository Structure
 
-```
+```text
 csec-astu-bms-project/
 ├── HANDOFF.md                   # Permanent agent session handoff & architectural guide
 ├── README.md                    # Project documentation
@@ -130,10 +137,12 @@ csec-astu-bms-project/
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - **Node.js:** v18.0.0 or higher (v20+ recommended)
 - **PostgreSQL:** Running on `127.0.0.1:5432`
 
 ### 1. Backend Setup
+
 ```powershell
 cd backend
 npm install
@@ -155,6 +164,7 @@ npm run dev
 ```
 
 ### 2. Frontend Setup
+
 ```powershell
 cd ../frontend
 npm install
@@ -172,26 +182,33 @@ Visit **http://localhost:3000** in your browser.
 Both frontend and backend are thoroughly covered by automated test suites:
 
 ### Running Backend Tests (102 tests)
+
 ```powershell
 cd backend
 npx vitest run
 ```
+
 *Output: 16 test files passed, 102 passed out of 102 tests.*
 
 ### Running Frontend Tests (13 tests)
+
 ```powershell
 cd frontend
 npx vitest run
 ```
+
 *Output: 3 test files passed, 13 passed out of 13 tests.*
 
 ### Running Frontend Typecheck
+
 ```powershell
 npm run lint --prefix frontend
 ```
+
 *Output: `tsc --noEmit` exited with Code 0 (Zero errors).*
 
 ### Running Frontend Production Build
+
 ```powershell
 npm run build --prefix frontend
 ```

@@ -11,6 +11,7 @@
 The **CSEC-ASTU Bootcamp Management System (BMS)** is the centralized management platform engineered for the Computer Science & Engineering Club at Adama Science and Technology University (ASTU). It manages specialized division bootcamps (Competitive Programming, Cybersecurity & Defense, Software Engineering, Applied AI), cohort lifecycle phases, dynamic session attendance PIN verification, deliverable submissions, and computes transparent graduation induction using a multi-signal evaluation model.
 
 ### Ubiquitous Language Key Terms
+
 - **Division:** Specialization academic pillar (e.g., Development, Cybersecurity, CP, AI).
 - **Bootcamp / Cohort:** Training program with specific dates and 6-phase lifecycle: `DRAFT` ➔ `OPEN` ➔ `SCREENING` ➔ `ACTIVE` ➔ `COMPLETED` ➔ `ARCHIVED`.
 - **Induction Signals (4-Signal Model):**
@@ -26,6 +27,7 @@ The **CSEC-ASTU Bootcamp Management System (BMS)** is the centralized management
 ## 2. Architecture & Decision Records (ADRs)
 
 Consult the ratified ADR documents:
+
 - [ADR-0010: Frontend State Management RTK](docs/adr/0010-frontend-state-management-rtk.md) — Redux Toolkit + Axios client + typed async thunks.
 - [ADR-0011: Frontend Route Partitioning by Role](docs/adr/0011-frontend-route-partitioning-by-role.md) — Role-partitioned portals (`/dashboard/:role/*`) with active role switching for multi-role users.
 - [ADR-0012: Hybrid Auth httpOnly Cookies](docs/adr/0012-hybrid-auth-httponly-cookies.md) — Short-lived Bearer access token in memory + `httpOnly`, `SameSite=Lax` refresh cookie with automatic silent refresh queue.
@@ -37,6 +39,7 @@ Consult the ratified ADR documents:
 ## 3. Directory Structure & Key Modules
 
 ### Backend (`/backend`)
+
 - `src/app.js`: Express app with CORS (`credentials: true`, whitelist ports 3000 & 5173), `cookie-parser`, JSON parsing, error middleware. All endpoints mounted at `/api`.
 - `src/routes/index.js`: Mounted module routers (`/auth`, `/users`, `/divisions`, `/bootcamps`, `/sessions`, `/attendance`, `/enrollments`, `/tasks`, `/submissions`, `/progress`, `/reports`, `/groups`, `/resources`, `/audit`).
 - `src/modules/auth/`: Hybrid auth implementation returning sanitized user with `roles` array and tokens.
@@ -45,6 +48,7 @@ Consult the ratified ADR documents:
 - `tests/`: 16 Vitest test suites (102 tests passing).
 
 ### Frontend (`/frontend`)
+
 - `src/api/client.ts`: Axios instance with `withCredentials: true`, Bearer interceptor, and 401 automatic silent refresh retry queue.
 - `src/app/store.ts`: Redux Toolkit store with 10 slices (`auth`, `bootcamps`, `sessions`, `tasks`, `attendance`, `groups`, `enrollments`, `reports`, `feedback`, `ui`).
 - `src/config/navigation.ts`: Declarative navigation seam providing per-role navigation trees (`getNavForRole`, `getDashboardRoot`).
@@ -64,36 +68,48 @@ Consult the ratified ADR documents:
 ## 4. How to Run & Verify
 
 ### Running Tests
-- **Backend Test Suite (102 tests):**
-  ```powershell
-  Set-Location c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend
-  npx vitest run
-  ```
-- **Frontend Test Suite (13 tests):**
-  ```powershell
-  Set-Location c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
-  npx vitest run
-  ```
-- **Frontend Typecheck (tsc):**
-  ```powershell
-  npm run lint --prefix c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
-  ```
-- **Frontend Production Build:**
-  ```powershell
-  npm run build --prefix c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
-  ```
+
+#### Backend Test Suite (102 tests)
+
+```powershell
+Set-Location c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend
+npx vitest run
+```
+
+#### Frontend Test Suite (13 tests)
+
+```powershell
+Set-Location c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
+npx vitest run
+```
+
+#### Frontend Typecheck (tsc)
+
+```powershell
+npm run lint --prefix c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
+```
+
+#### Frontend Production Build
+
+```powershell
+npm run build --prefix c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
+```
 
 ### Running Development Servers
-- **Backend (Port 5000):**
-  ```powershell
-  cd c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend
-  npm run dev
-  ```
-- **Frontend (Port 3000):**
-  ```powershell
-  cd c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
-  npm run dev
-  ```
+
+#### Backend (Port 5000)
+
+```powershell
+cd c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/backend
+npm run dev
+```
+
+#### Frontend (Port 3000)
+
+```powershell
+cd c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project/frontend
+npm run dev
+```
 
 ---
 
@@ -121,6 +137,7 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
 | **GUEST** | `new.guest@csec.astu.edu.et` | `Password123!` | Helen Berhanu — Clean guest with no applications submitted |
 
 ### Live Attendance PIN Demo
+
 - **Bootcamp:** Cybersecurity & Defense Bootcamp 2026 (`ACTIVE`)
 - **Session:** *Session 2: Web App Penetration Testing & OWASP Top 10* (`APPROVED`, active window)
 - **Active PIN Code:** `749201`
@@ -167,6 +184,7 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
 ## 8. Suggested Skills
 
 When resuming work on this repository, the next agent should invoke:
+
 - `codebase-design` — To maintain the deep module boundaries established in Tier 1 and Tier 2 primitives.
 - `diagnosing-bugs` — If any live runtime API connection or database issues occur.
 - `tdd` — When introducing new API endpoints or complex feature slices.
