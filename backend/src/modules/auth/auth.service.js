@@ -189,7 +189,7 @@ export const loginUser = async (email, password, deps = {}) => {
   const { passwordHash, passwordResetToken, ...sanitized } = user;
 
   return {
-    user: sanitized,
+    user: {...sanitized,roles},
     tokens: { accessToken, refreshToken },
   };
 };
@@ -205,6 +205,7 @@ export const currentUser = async (userId, deps = {}) => {
   }
 
   let user;
+  
   if (deps.db) {
     user = deps.db.find((u) => u.id === userId);
   } else if (prisma) {
@@ -219,9 +220,11 @@ export const currentUser = async (userId, deps = {}) => {
     err.statusCode = 404;
     throw err;
   }
-
+  const roleAssignments = user.roleAssignments || [];
+  const roles = roleAssignments.map((a) => a.role);
+  
   const { passwordHash, passwordResetToken, ...sanitized } = user;
-  return sanitized;
+  return {...sanitized,roles};
 };
 
 /**
