@@ -1,69 +1,75 @@
-import Report from './report.model.js';
-import Attendance from '../attendance/attendance.model.js';
-import Submission from '../submissions/submission.model.js';
-import Task from '../tasks/task.model.js';
-import User from '../users/user.model.js';
+import prisma from "../../config/prisma.js";
+
+// In-memory backing for administrative reporting documents
+let memoryReports = [];
 
 export const createReport = async (data) => {
-  const report = new Report(data);
-  return report.save();
+  const report = {
+    id: `rep_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+    title: data.title,
+    content: data.content,
+    author: data.author,
+    meta: data.meta || {},
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+  memoryReports.unshift(report);
+  return report;
 };
 
 export const getReports = async (filter = {}, options = {}) => {
-  return Report.find(filter)
-    .sort({ createdAt: -1 })
-    .limit(options.limit || 0)
-    .skip(options.skip || 0)
-    .lean();
+  return memoryReports;
 };
 
 export const getReportById = async (id) => {
-  return Report.findById(id).lean();
+  return memoryReports.find((r) => r.id === id) || null;
 };
 
 export const updateReport = async (id, data) => {
-  return Report.findByIdAndUpdate(id, data, { returnDocument: 'after' }).lean();
+  const index = memoryReports.findIndex((r) => r.id === id);
+  if (index === -1) return null;
+  memoryReports[index] = { ...memoryReports[index], ...data, updatedAt: new Date() };
+  return memoryReports[index];
 };
 
 export const deleteReport = async (id) => {
-  return Report.findByIdAndDelete(id);
+  const index = memoryReports.findIndex((r) => r.id === id);
+  if (index === -1) return null;
+  const deleted = memoryReports.splice(index, 1);
+  return deleted[0];
 };
-
-import os from 'os';
 
 export const getGlobalAnalytics = async () => {
   const oneWeekAgo = new Date();
   oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  
-  const recentAttendanceCount = await Attendance.countDocuments({
-    createdAt: { $gte: oneWeekAgo }
+
+  const recentAttendanceCount = await prisma.attendanceRecord.count({
+    where: {
+      createdAt: { gte: oneWeekAgo },
+    },
   });
 
-  const totalTasks = await Task.countDocuments();
-  const totalStudents = await User.countDocuments({ role: 'student' });
-  const totalSubmissions = await Submission.countDocuments();
+  const totalTasks = await prisma.task.count();
+  const totalStudents = await prisma.userRoleAssignment.count({
+    where: { role: "STUDENT" },
+  });
+  const totalSubmissions = await prisma.submission.count();
 
   let submissionRate = 0;
   if (totalTasks > 0 && totalStudents > 0) {
-    submissionRate = Math.min(Math.round((totalSubmissions / (totalTasks * totalStudents)) * 100), 100);
+    submissionRate = Math.min(
+      Math.round((totalSubmissions / (totalTasks * totalStudents)) * 100),
+      100
+    );
   } else if (totalSubmissions > 0) {
     submissionRate = 100;
   }
 
-  // SYSTEM DIAGNOSTICS
-  const freeMem = os.freemem();
-  const totalMem = os.totalmem();
-  const memUsage = Math.round(((totalMem - freeMem) / totalMem) * 100);
-  const loadAvg = os.loadavg()[0].toFixed(2);
-  const sysUptime = Math.floor(os.uptime() / 3600); // in hours
-
   return {
-    attendance: recentAttendanceCount,
-    submissionsRate: submissionRate,
-    uptime: `${sysUptime}h`,
-    cpuLoad: `${loadAvg}%`,
-    memoryUsage: `${memUsage}%`,
-    platform: os.platform(),
-    totalMemory: `${(totalMem / (1024 * 1024 * 1024)).toFixed(2)} GB`
+    recentAttendanceCount,
+    totalTasks,
+    totalStudents,
+    totalSubmissions,
+    submissionRate,
   };
 };

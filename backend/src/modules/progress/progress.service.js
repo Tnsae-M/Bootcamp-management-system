@@ -1,9 +1,4 @@
-import Enrollment from "../enrollments/enrollment.model.js";
-import Attendance from "../attendance/attendance.model.js";
-import Task from "../tasks/task.model.js";
-import Submission from "../submissions/submission.model.js";
-import Session from "../sessions/session.model.js";
-
+import prisma from "../../config/prisma.js";
 
 const buildError = (msg, code = 400) => {
   const err = new Error(msg);
@@ -13,58 +8,53 @@ const buildError = (msg, code = 400) => {
 
 export const getMyProgress = async (userId, bootcampId) => {
   // Check enrollment
-  const enrollment = await Enrollment.findOne({ userId, bootcampId });
+  const enrollment = await prisma.enrollment.findUnique({
+    where: { userId_bootcampId: { userId, bootcampId } },
+  });
   if (!enrollment) {
     throw buildError("Not enrolled in this bootcamp", 403);
   }
 
   // ATTENDANCE
-  // =========================
-//   const totalSessions = await Attendance.countDocuments({ bootcampId });
+  const totalSessions = await prisma.session.count({
+    where: { bootcampId, status: "APPROVED" },
+  });
 
-const totalSessions = await Session.countDocuments({
-  bootcamp: bootcampId,
-});
-
-  const attendedSessions = await Attendance.countDocuments({
-    bootcampId,
-    userId,
-    status: "present",
+  const attendedRecords = await prisma.attendanceRecord.count({
+    where: {
+      userId,
+      session: { bootcampId },
+      status: { in: ["PRESENT", "LATE"] },
+    },
   });
 
   const attendanceRate =
-    totalSessions === 0 ? 0 : (attendedSessions / totalSessions) * 100;
+    totalSessions === 0 ? 0 : (attendedRecords / totalSessions) * 100;
 
-  //  TASKS
-  // =========================
-  const totalTasks = await Task.countDocuments({ bootcampId });
+  // TASKS
+  const totalTasks = await prisma.task.count({
+    where: { bootcampId },
+  });
 
-  const submissions = await Submission.find({ studentId: userId })
-    .populate("taskId");
+  const submissions = await prisma.submission.findMany({
+    where: {
+      userId,
+      task: { bootcampId },
+    },
+  });
 
-  const submittedTasks = submissions.filter(
-    (s) => s.taskId.bootcampId.toString() === bootcampId.toString()
-  );
-
+  const submittedTasks = submissions.length;
   const taskCompletionRate =
-    totalTasks === 0 ? 0 : (submittedTasks.length / totalTasks) * 100;
+    totalTasks === 0 ? 0 : (submittedTasks / totalTasks) * 100;
 
-  // =========================
-  //  SCORES
-  // =========================
-  const graded = submittedTasks.filter((s) => s.score !== null);
-
-  const totalScore = graded.reduce((acc, s) => acc + s.score, 0);
-
-  const avgScore =
-    graded.length === 0 ? 0 : totalScore / graded.length;
+  // SCORES
+  const graded = submissions.filter((s) => s.score !== null && s.score !== undefined);
+  const totalScore = graded.reduce((acc, s) => acc + (s.score || 0), 0);
+  const avgScore = graded.length === 0 ? 0 : totalScore / graded.length;
 
   // FINAL PROGRESS SCORE
-  // =========================
   const overallProgress =
-    attendanceRate * 0.3 +
-    taskCompletionRate * 0.4 +
-    avgScore * 0.3;
+    attendanceRate * 0.3 + taskCompletionRate * 0.4 + avgScore * 0.3;
 
   return {
     attendanceRate: Math.round(attendanceRate),

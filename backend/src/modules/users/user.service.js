@@ -1,79 +1,115 @@
-import User from './user.model.js';
-import bcrypt from 'bcrypt';
-import { sanitizeUser, USER_POPULATE } from './user.sanitize.js';
+import prisma from "../../config/prisma.js";
+import bcrypt from "bcrypt";
+import { sanitizeUser } from "./user.sanitize.js";
+
+const buildError = (msg, statusCode = 400) => {
+  const err = new Error(msg);
+  err.statusCode = statusCode;
+  return err;
+};
 
 export const createUser = async (userData) => {
-  // Format bootcamps array if provided as raw IDs
-  if (userData.bootcamps && Array.isArray(userData.bootcamps)) {
-    userData.bootcamps = userData.bootcamps.map(id => ({ bootcampId: id }));
+  const email = (userData.email || "").toLowerCase().trim();
+  const existing = await prisma.user.findUnique({ where: { email } });
+  if (existing) {
+    throw buildError("Email already exists", 409);
   }
 
-  const existingUser = await User.findOne({ email: userData.email });
-  if (existingUser) {
-    const error = new Error('Email already exists');
-    error.statusCode = 409; // Conflict
-    throw error;
-  }
-  if (userData.password) {
-    userData.password = await bcrypt.hash(userData.password, 10);
-  }
+  const passwordHash = await bcrypt.hash(userData.password || "Password123!", 10);
+  const roles = userData.roles || (userData.role ? [userData.role] : ["STUDENT"]);
 
-  const user = new User(userData);
-  await user.save();
-  await user.populate(USER_POPULATE);
+  const user = await prisma.user.create({
+    data: {
+      fullName: userData.fullName || userData.name || "Unnamed User",
+      email,
+      passwordHash,
+      department: userData.department || null,
+      universityId: userData.universityId || null,
+      telegramUsername: userData.telegramUsername || null,
+      isEmailVerified: true,
+      roleAssignments: {
+        create: roles.map((r) => ({
+          role: r === "SUPER ADMIN" ? "SUPER_ADMIN" : r,
+          scopeType: "GLOBAL",
+        })),
+      },
+    },
+    include: { roleAssignments: true },
+  });
 
-  return sanitizeUser(user);
+  return sanitizeUser({
+    ...user,
+    _id: user.id,
+    name: user.fullName,
+    roles: user.roleAssignments.map((a) => a.role),
+  });
 };
 
 export const getAllUsers = async (filter = {}) => {
-  const users = await User.find(filter).populate(USER_POPULATE);
-  return users.map(sanitizeUser);
+  const users = await prisma.user.findMany({
+    include: { roleAssignments: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return users.map((u) =>
+    sanitizeUser({
+      ...u,
+      _id: u.id,
+      name: u.fullName,
+      roles: u.roleAssignments.map((a) => a.role),
+    })
+  );
 };
 
 export const getUserById = async (userId) => {
-  const user = await User.findById(userId).populate(USER_POPULATE);
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { roleAssignments: true },
+  });
 
   if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
+    throw buildError("User not found", 404);
   }
-  return sanitizeUser(user);
+
+  return sanitizeUser({
+    ...user,
+    _id: user.id,
+    name: user.fullName,
+    roles: user.roleAssignments.map((a) => a.role),
+  });
 };
 
 export const updateUser = async (userId, updateData) => {
-  // Prevent password updates through this generic method
-  if (updateData.password) {
-    delete updateData.password;
-  }
+  const data = {};
+  if (updateData.name || updateData.fullName) data.fullName = updateData.name || updateData.fullName;
+  if (updateData.department !== undefined) data.department = updateData.department;
+  if (updateData.universityId !== undefined) data.universityId = updateData.universityId;
+  if (updateData.telegramUsername !== undefined) data.telegramUsername = updateData.telegramUsername;
 
-  // Format bootcamps if provided as IDs
-  if (updateData.bootcamps && Array.isArray(updateData.bootcamps)) {
-    updateData.bootcamps = updateData.bootcamps.map(id => ({ bootcampId: id }));
-  }
+  const user = await prisma.user.update({
+    where: { id: userId },
+    data,
+    include: { roleAssignments: true },
+  });
 
-  const user = await User.findByIdAndUpdate(userId, updateData, {
-    returnDocument: 'after', // Return the updated document
-    runValidators: true // Ensure schema rules (like enums) are respected
-  }).populate(USER_POPULATE);
-
-  if (!user) {
-    const error = new Error('User not found');
-    error.statusCode = 404;
-    throw error;
-  }
-
-  return sanitizeUser(user);
+  return sanitizeUser({
+    ...user,
+    _id: user.id,
+    name: user.fullName,
+    roles: user.roleAssignments.map((a) => a.role),
+  });
 };
 
 export const deleteUser = async (userId) => {
-  const user = await User.findByIdAndDelete(userId);
+  const user = await prisma.user.delete({
+    where: { id: userId },
+    include: { roleAssignments: true },
+  });
 
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  return sanitizeUser(user);
+  return sanitizeUser({
+    ...user,
+    _id: user.id,
+    name: user.fullName,
+    roles: user.roleAssignments.map((a) => a.role),
+  });
 };

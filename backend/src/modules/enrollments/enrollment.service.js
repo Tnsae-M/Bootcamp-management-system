@@ -1,8 +1,4 @@
 import prisma from "../../config/prisma.js";
-import User from "../users/user.model.js";
-import Bootcamp from "../bootcamps/bootcamp.model.js";
-import Enrollment from "./enrollment.model.js";
-import mongoose from "mongoose";
 
 const buildError = (message, statusCode = 400) => {
   const err = new Error(message);
@@ -10,39 +6,42 @@ const buildError = (message, statusCode = 400) => {
   return err;
 };
 
-export const enrollUser = async (userId, bootcampId) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+/**
+ * Enrolls a user into a bootcamp using Prisma transaction
+ */
+export const enrollUser = async (userId, bootcampId, deps = {}) => {
+  const client = deps.prisma || prisma;
 
-  try {
-    const user = await User.findById(userId).session(session);
+  return await client.$transaction(async (tx) => {
+    const user = await tx.user.findUnique({ where: { id: userId } });
     if (!user) throw buildError("User not found", 404);
 
-    const bootcamp = await Bootcamp.findById(bootcampId).session(session);
+    const bootcamp = await tx.bootcamp.findUnique({ where: { id: bootcampId } });
     if (!bootcamp) throw buildError("Bootcamp not found", 404);
 
-    const existing = await Enrollment.findOne({ userId, bootcampId }).session(session);
+    const existing = await tx.enrollment.findUnique({
+      where: { userId_bootcampId: { userId, bootcampId } },
+    });
     if (existing) throw buildError("Already enrolled", 409);
 
-    if (bootcamp.divisionId && !user.divisionId) {
-      user.divisionId = bootcamp.divisionId;
-      await user.save({ session });
+    if (bootcamp.divisionId && !user.department) {
+      await tx.user.update({
+        where: { id: userId },
+        data: { department: bootcamp.divisionId },
+      });
+      user.department = bootcamp.divisionId;
     }
 
-    const enrollment = await Enrollment.create(
-      [{ userId, bootcampId }],
-      { session }
-    );
+    const enrollment = await tx.enrollment.create({
+      data: {
+        userId,
+        bootcampId,
+        status: "STUDENT",
+      },
+    });
 
-    await session.commitTransaction();
-    session.endSession();
-
-    return enrollment[0];
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    throw err;
-  }
+    return enrollment;
+  });
 };
 
 /**
