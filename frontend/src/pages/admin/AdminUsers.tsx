@@ -205,10 +205,10 @@ export default function AdminUsers() {
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border)] bg-[var(--card)]">
-              {filtered.map((u) => (
-                <tr key={u.id} className="hover:bg-[var(--accent)]/50 transition-colors">
+              {filtered.map((u, userIdx) => (
+                <tr key={u.id || u._id || `user-${userIdx}`} className="hover:bg-[var(--accent)]/50 transition-colors">
                   <td className="px-4 py-3 font-semibold text-[var(--foreground)]">
-                    {u.fullName || 'User'}
+                    {u.fullName || u.name || 'User'}
                   </td>
                   <td className="px-4 py-3 text-[var(--muted-foreground)]">{u.email}</td>
                   <td className="px-4 py-3 text-[var(--muted-foreground)] font-mono">
@@ -219,8 +219,12 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
-                      {u.roles?.map((r) => (
-                        <StatusBadge key={r} status={r} className="text-[10px]" />
+                      {Array.from(new Set(u.roles || [])).map((r, roleIdx) => (
+                        <StatusBadge
+                          key={`${u.id || u._id || userIdx}-${r}-${roleIdx}`}
+                          status={r}
+                          className="text-[10px]"
+                        />
                       ))}
                     </div>
                   </td>

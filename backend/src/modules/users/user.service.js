@@ -37,12 +37,21 @@ export const createUser = async (userData) => {
     include: { roleAssignments: true },
   });
 
-  return sanitizeUser({
+  const sanitized = sanitizeUser({
     ...user,
     _id: user.id,
     name: user.fullName,
-    roles: user.roleAssignments.map((a) => a.role),
+    roles: Array.from(new Set(user.roleAssignments.map((a) => a.role))),
   });
+
+  return {
+    ...sanitized,
+    id: user.id,
+    fullName: user.fullName,
+    universityId: user.universityId,
+    department: user.department,
+    telegramUsername: user.telegramUsername,
+  };
 };
 
 export const getAllUsers = async (filter = {}) => {
@@ -51,14 +60,22 @@ export const getAllUsers = async (filter = {}) => {
     orderBy: { createdAt: "desc" },
   });
 
-  return users.map((u) =>
-    sanitizeUser({
+  return users.map((u) => {
+    const sanitized = sanitizeUser({
       ...u,
       _id: u.id,
       name: u.fullName,
-      roles: u.roleAssignments.map((a) => a.role),
-    })
-  );
+      roles: Array.from(new Set(u.roleAssignments.map((a) => a.role))),
+    });
+    return {
+      ...sanitized,
+      id: u.id,
+      fullName: u.fullName,
+      universityId: u.universityId,
+      department: u.department,
+      telegramUsername: u.telegramUsername,
+    };
+  });
 };
 
 export const getUserById = async (userId) => {
@@ -71,12 +88,21 @@ export const getUserById = async (userId) => {
     throw buildError("User not found", 404);
   }
 
-  return sanitizeUser({
+  const sanitized = sanitizeUser({
     ...user,
     _id: user.id,
     name: user.fullName,
-    roles: user.roleAssignments.map((a) => a.role),
+    roles: Array.from(new Set(user.roleAssignments.map((a) => a.role))),
   });
+
+  return {
+    ...sanitized,
+    id: user.id,
+    fullName: user.fullName,
+    universityId: user.universityId,
+    department: user.department,
+    telegramUsername: user.telegramUsername,
+  };
 };
 
 export const updateUser = async (userId, updateData) => {
@@ -92,12 +118,21 @@ export const updateUser = async (userId, updateData) => {
     include: { roleAssignments: true },
   });
 
-  return sanitizeUser({
+  const sanitized = sanitizeUser({
     ...user,
     _id: user.id,
     name: user.fullName,
-    roles: user.roleAssignments.map((a) => a.role),
+    roles: Array.from(new Set(user.roleAssignments.map((a) => a.role))),
   });
+
+  return {
+    ...sanitized,
+    id: user.id,
+    fullName: user.fullName,
+    universityId: user.universityId,
+    department: user.department,
+    telegramUsername: user.telegramUsername,
+  };
 };
 
 export const deleteUser = async (userId) => {
@@ -106,10 +141,19 @@ export const deleteUser = async (userId) => {
     include: { roleAssignments: true },
   });
 
-  return sanitizeUser({
+  const sanitized = sanitizeUser({
     ...user,
     _id: user.id,
     name: user.fullName,
-    roles: user.roleAssignments.map((a) => a.role),
+    roles: Array.from(new Set(user.roleAssignments.map((a) => a.role))),
   });
+
+  return {
+    ...sanitized,
+    id: user.id,
+    fullName: user.fullName,
+    universityId: user.universityId,
+    department: user.department,
+    telegramUsername: user.telegramUsername,
+  };
 };
