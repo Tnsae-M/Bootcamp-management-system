@@ -95,15 +95,45 @@ Consult the ratified ADR documents:
 
 ---
 
-## 5. What the Next Session Can Focus On
+## 5. Seeded Test Data & Role Accounts
 
-1. **End-to-End Interactive Testing:** Run both servers concurrently and test end-to-end user journeys (guest registration $\rightarrow$ application $\rightarrow$ admin admissions screening $\rightarrow$ student session check-in with PIN $\rightarrow$ instructor grading).
-2. **Database Seeding & Test Data:** Populate seed scripts (`prisma/seed.js`) with realistic mock divisions, bootcamps, and users for visual demonstration.
-3. **Deployment Preparation:** Dockerfile creation or review, environment variable configuration for staging/production.
+The database is seeded with complete realistic datasets covering all 4 academic divisions, all 6 bootcamp lifecycle phases, session attendance PIN verification, deliverables, capstone squads, and induction decisions:
+
+| Role | Account Email | Password | Scope & Notes |
+| :--- | :--- | :--- | :--- |
+| **SUPER_ADMIN** | `tinsae.melkamu.tk@gmail.com` | `Admin123!` | GLOBAL scope — Full system administrative access, audit logs, reports |
+| **DIVISION_ADMIN** | `dev.admin@csec.astu.edu.et` | `Admin123!` | Development Division Head |
+| **DIVISION_ADMIN** | `cyber.admin@csec.astu.edu.et` | `Admin123!` | Cybersecurity Division Head (Reviews Session proposals) |
+| **DIVISION_ADMIN** | `cp.admin@csec.astu.edu.et` | `Admin123!` | Competitive Programming Division Head |
+| **DIVISION_ADMIN** | `ai.admin@csec.astu.edu.et` | `Admin123!` | Applied AI Division Head |
+| **INSTRUCTOR** | `cyber.instructor@csec.astu.edu.et` | `Password123!` | Cybersecurity Lead (manages active sessions, grading, PIN) |
+| **INSTRUCTOR** | `instructor@csec.astu.edu.et` | `Password123!` | Web Development Lead |
+| **INSTRUCTOR** | `cp.instructor@csec.astu.edu.et` | `Password123!` | Competitive Programming Coach |
+| **STUDENT** | `student@csec.astu.edu.et` | `Password123!` | Abebe Bikila — Squad leader, active in Cyber & Web (ready to enter live PIN!) |
+| **STUDENT** | `selam.student@csec.astu.edu.et` | `Password123!` | Selamawit Tadesse — Top rank (94.2%), Inducted 2025, active in 2026 |
+| **STUDENT** | `kidus.student@csec.astu.edu.et` | `Password123!` | Kidus Yohannes — Active in Cyber |
+| **STUDENT** | `meron.student@csec.astu.edu.et` | `Password123!` | Meron Hailu — Active in Cyber |
+| **STUDENT** | `yared.student@csec.astu.edu.et` | `Password123!` | Yared Alemu — Cohort 2025 `NOT_INDUCTED` (<75% threshold demo) |
+| **GUEST** | `applicant@csec.astu.edu.et` | `Password123!` | Chaltu Desta — Pending applicant in Web Dev 2026 |
+| **GUEST** | `rejected.applicant@csec.astu.edu.et` | `Password123!` | Dawit Mengistu — Rejected applicant status demo |
+| **GUEST** | `new.guest@csec.astu.edu.et` | `Password123!` | Helen Berhanu — Clean guest with no applications submitted |
+
+### Live Attendance PIN Demo
+- **Bootcamp:** Cybersecurity & Defense Bootcamp 2026 (`ACTIVE`)
+- **Session:** *Session 2: Web App Penetration Testing & OWASP Top 10* (`APPROVED`, active window)
+- **Active PIN Code:** `749201`
+- **Verification Flow:** Log in as `student@csec.astu.edu.et` $\rightarrow$ Navigate to Student Sessions $\rightarrow$ Enter PIN `749201` to record attendance as `PRESENT`.
 
 ---
 
-## 6. Suggested Skills
+## 6. What the Next Session Can Focus On
+
+1. **End-to-End Interactive Testing:** Run both servers concurrently and test end-to-end user journeys across all 4 role portals using the seeded accounts.
+2. **Deployment Preparation:** Dockerfile creation or review, environment variable configuration for staging/production.
+
+---
+
+## 7. Suggested Skills
 
 When resuming work on this repository, the next agent should invoke:
 - `codebase-design` — To maintain the deep module boundaries established in Tier 1 and Tier 2 primitives.
