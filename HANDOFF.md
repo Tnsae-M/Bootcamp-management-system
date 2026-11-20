@@ -2,7 +2,7 @@
 
 **Generated:** 2026-11-20  
 **Project Workspace:** `c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project`  
-**Current State:** Full stack operational. Backend test suite 100% green (102/102). Frontend rebuilt from scratch across all 5 stages, 100% typechecked (`tsc --noEmit` code 0), production build passing, and frontend test suite 100% green (13/13).
+**Current State:** Full stack operational. Backend 100% migrated to PostgreSQL & Prisma with legacy Mongoose completely removed (all 16 `*.model.js` files deleted). Backend test suite 100% green (102/102). Frontend rebuilt across all 5 stages, 100% typechecked (`tsc --noEmit` code 0), production build passing, and frontend test suite 100% green (13/13).
 
 ---
 
@@ -30,17 +30,19 @@ Consult the ratified ADR documents:
 - [ADR-0011: Frontend Route Partitioning by Role](docs/adr/0011-frontend-route-partitioning-by-role.md) — Role-partitioned portals (`/dashboard/:role/*`) with active role switching for multi-role users.
 - [ADR-0012: Hybrid Auth httpOnly Cookies](docs/adr/0012-hybrid-auth-httponly-cookies.md) — Short-lived Bearer access token in memory + `httpOnly`, `SameSite=Lax` refresh cookie with automatic silent refresh queue.
 - [ADR-0013: Two-Tier UI Deep Primitives](docs/adr/0013-two-tier-ui-deep-primitives.md) — Tier 1 (shadcn/radix base) + Tier 2 (deep domain primitives hiding domain status maps and token logic).
+- [UI/UX Improvement Plan (Livery-Adapted)](docs/ui-ux-improvement-plan.md) — Structure, motion, 8px radii, 4px grid, and direct voice adapted from Udemy design kit while preserving CSEC-ASTU brand colors (`#2563eb` / `#3b82f6`).
 
 ---
 
 ## 3. Directory Structure & Key Modules
 
 ### Backend (`/backend`)
-- `src/app.js`: Express app with CORS (`credentials: true`), `cookie-parser`, JSON parsing, error middleware.
+- `src/app.js`: Express app with CORS (`credentials: true`, whitelist ports 3000 & 5173), `cookie-parser`, JSON parsing, error middleware. All endpoints mounted at `/api`.
 - `src/routes/index.js`: Mounted module routers (`/auth`, `/users`, `/divisions`, `/bootcamps`, `/sessions`, `/attendance`, `/enrollments`, `/tasks`, `/submissions`, `/progress`, `/reports`, `/groups`, `/resources`, `/audit`).
-- `src/modules/auth/`: Hybrid auth implementation with `POST /api/auth/refresh`, `POST /api/auth/logout`, `POST /api/auth/login`, `POST /api/auth/register`, and `PUT /api/auth/change-password`.
-- `prisma/schema.prisma`: Schema definitions for PostgreSQL database.
-- `tests/`: 16 Vitest test suites (102 tests).
+- `src/modules/auth/`: Hybrid auth implementation returning sanitized user with `roles` array and tokens.
+- `src/modules/`: 100% PostgreSQL via Prisma ORM. Mongoose completely purged (`mongoose` removed from `package.json`, 16 legacy `*.model.js` files deleted).
+- `prisma/schema.prisma`: Comprehensive schema definitions for PostgreSQL (`csec_bms_db`).
+- `tests/`: 16 Vitest test suites (102 tests passing).
 
 ### Frontend (`/frontend`)
 - `src/api/client.ts`: Axios instance with `withCredentials: true`, Bearer interceptor, and 401 automatic silent refresh retry queue.
@@ -48,7 +50,7 @@ Consult the ratified ADR documents:
 - `src/config/navigation.ts`: Declarative navigation seam providing per-role navigation trees (`getNavForRole`, `getDashboardRoot`).
 - `src/components/ui/`: Tier 1 primitives (`Button`, `Input`, `Textarea`, `Card`, `Skeleton`, `FormField`, `Badge`, `Modal`, `EmptyState`, `Separator`).
 - `src/components/common/`: Tier 2 deep domain primitives (`Logo`, `PageHeader`, `StatusBadge`, `StatGrid`, `DataTable`, `Breadcrumbs`).
-- `src/components/layout/`: `Sidebar` (collapsible 256px $\leftrightarrow$ 60px), `Navbar`, `DashboardLayout`, and `ProtectedRoute`.
+- `src/components/layout/`: `Sidebar` (collapsible 256px $\leftrightarrow$ 60px), `Navbar` (with multi-role switcher), `DashboardLayout`, and `ProtectedRoute`.
 - `src/pages/`:
   - Public/Auth: `LandingPage`, `LoginPage`, `RegisterPage`, `ForgotPasswordPage`, `ResetPasswordPage`, `VerifyEmailPage`, `NotFoundPage`.
   - Guest (`/dashboard/guest/*`): `GuestDashboard`, `GuestApplications`, `GuestProfile`.
@@ -97,7 +99,7 @@ Consult the ratified ADR documents:
 
 ## 5. Seeded Test Data & Role Accounts
 
-The database is seeded with complete realistic datasets covering all 4 academic divisions, all 6 bootcamp lifecycle phases, session attendance PIN verification, deliverables, capstone squads, and induction decisions:
+The database is seeded (`npm run seed --prefix backend`) with realistic datasets covering all 4 academic divisions, all 6 bootcamp lifecycle phases, session attendance PIN verification, deliverables, capstone squads, and induction decisions:
 
 | Role | Account Email | Password | Scope & Notes |
 | :--- | :--- | :--- | :--- |
@@ -126,18 +128,46 @@ The database is seeded with complete realistic datasets covering all 4 academic 
 
 ---
 
-## 6. What the Next Session Can Focus On
+## 6. Recent Work & Bug Fixes (Latest Session)
 
-1. **End-to-End Interactive Testing:** Run both servers concurrently and test end-to-end user journeys across all 4 role portals using the seeded accounts.
-2. **Deployment Preparation:** Dockerfile creation or review, environment variable configuration for staging/production.
+1. **Database Seeding:**
+   - Expanded `backend/prisma/seed.js` with comprehensive mock data covering 4 divisions, 6 bootcamps, capstone squad (*CyberDefenders Squad Alpha*), peer reviews, resources, notifications, and 4-signal induction records.
+2. **Database Cleanup Audit (Mongoose $\rightarrow$ PostgreSQL/Prisma):**
+   - Audited all modules and eliminated all 16 legacy `*.model.js` files.
+   - Migrated `users`, `audit`, `progress`, `reports`, `resources`, `enrollments`, and `projects` modules to Prisma ORM.
+   - Removed `mongoose` dependency from `backend/package.json` and legacy `MONGODB_URL` from `.env`.
+   - Updated `enrollment.service.test.js` to test Prisma transactions.
+3. **Frontend & Backend Communication Alignment:**
+   - Resolved port 3000 dev server to port 5000 backend routing.
+   - Configured Vite proxy and Axios `apiClient` to preserve the `/api` prefix expected by Express.
+4. **Auth & Role Pipeline Fixes:**
+   - Updated `auth.service.js` to return `roles` in `loginUser` and `currentUser` responses so the frontend `authSlice` receives the user's role array.
+5. **Admin Table Key & Rendering Polish:**
+   - Fixed missing `<tr>` key warning in `AdminUsers.tsx` with fallback keys (`u.id || u._id || userIdx`).
+   - Deduplicated role tags in `<StatusBadge>` mapping with unique composite keys (`${u.id}-${r}-${roleIdx}`).
+   - Enhanced `user.service.js` to return `id`, `_id`, `fullName`, `name`, `universityId`, `department`, and deduplicated `roles`.
+6. **UI/UX Improvement Plan:**
+   - Formulated [docs/ui-ux-improvement-plan.md](docs/ui-ux-improvement-plan.md) adapting the Udemy Livery design kit (neutral dark surfaces, 8px default radii, 4px spacing rhythm, 250ms transitions, conversational microcopy) while maintaining CSEC-ASTU Electric Blue brand identity.
 
 ---
 
-## 7. Suggested Skills
+## 7. What the Next Session Can Focus On
+
+1. **Execute UI/UX Improvement Plan (Phase 1–3):**
+   - **Phase 1 (Tokens):** Refine CSS variables in `src/index.css` (neutral dark surfaces, un-tinted soft shadows, 8px default radius).
+   - **Phase 2 (Tier 1 Base Controls):** Polish `Button`, `Card`, `Input`, and `Modal` recipes.
+   - **Phase 3 (Tier 2 Primitives):** Polish `StatusBadge`, `StatGrid`, and `PageHeader` in sentence case.
+2. **End-to-End Interactive Verification:**
+   - Test flows live across roles (Guest apply $\rightarrow$ Admin approve $\rightarrow$ Student PIN attendance with `749201` $\rightarrow$ Instructor grade submission $\rightarrow$ Induction leaderboard).
+3. **Deployment Preparation:**
+   - Dockerfile creation/review, production environment variable validation, and CI/CD check scripts.
+
+---
+
+## 8. Suggested Skills
 
 When resuming work on this repository, the next agent should invoke:
 - `codebase-design` — To maintain the deep module boundaries established in Tier 1 and Tier 2 primitives.
 - `diagnosing-bugs` — If any live runtime API connection or database issues occur.
 - `tdd` — When introducing new API endpoints or complex feature slices.
 - `antigravity-guide` — For Antigravity workflow standards and tool ergonomics.
-
