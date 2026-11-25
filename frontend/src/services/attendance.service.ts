@@ -10,14 +10,22 @@ export const attendanceService = {
     return apiClient.post('/attendance/submit', payload);
   },
 
-  getRecords: async (params?: { sessionId?: string; bootcampId?: string }): Promise<AttendanceRecord[]> => {
-    const res: any = await apiClient.get('/attendance', { params });
+  // C-5 fix: no GET /attendance root — route to /me or /session/:sessionId based on params
+  getMyAttendance: async (): Promise<AttendanceRecord[]> => {
+    const res: any = await apiClient.get('/attendance/me');
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.records || [];
   },
 
-  overrideAttendance: async (id: string, status: string, note?: string): Promise<any> => {
-    return apiClient.put(`/attendance/${id}/override`, { status, overrideNote: note });
+  getSessionAttendance: async (sessionId: string): Promise<AttendanceRecord[]> => {
+    const res: any = await apiClient.get(`/attendance/session/${sessionId}`);
+    const data = res.data ?? res;
+    return Array.isArray(data) ? data : data?.records || [];
+  },
+
+  // C-6 fix: method is POST (not PUT) and path is /override (not /:id/override)
+  overrideAttendance: async (payload: { sessionId: string; userId: string; status: string; overrideNote?: string }): Promise<any> => {
+    return apiClient.post('/attendance/override', payload);
   },
 };
 

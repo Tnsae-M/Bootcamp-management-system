@@ -9,7 +9,7 @@ export const sessionsService = {
   },
 
   getSessionsByBootcamp: async (bootcampId: string): Promise<Session[]> => {
-    const res: any = await apiClient.get(`/sessions?bootcamp=${bootcampId}`);
+    const res: any = await apiClient.get(`/sessions/bootcamp/${bootcampId}`); // C-4 fix: path param, not query string
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.sessions || [];
   },
@@ -20,12 +20,21 @@ export const sessionsService = {
   },
 
   createSession: async (data: any): Promise<Session> => {
-    const res: any = await apiClient.post('/sessions', data);
+    const res: any = await apiClient.post('/sessions/propose', data); // C-2 fix: backend route is /propose
     return res.data ?? res;
   },
 
-  updateSessionStatus: async (id: string, status: string, note?: string): Promise<any> => {
-    return apiClient.put(`/sessions/${id}/status`, { status, rejectionNote: note });
+  // C-3 fix: backend has separate approve / reject / cancel routes — no generic /status route
+  approveSession: async (id: string): Promise<any> => {
+    return apiClient.put(`/sessions/${id}/approve`);
+  },
+
+  rejectSession: async (id: string, rejectionNote?: string): Promise<any> => {
+    return apiClient.put(`/sessions/${id}/reject`, { rejectionNote });
+  },
+
+  cancelSession: async (id: string): Promise<any> => {
+    return apiClient.put(`/sessions/${id}/cancel`);
   },
 };
 

@@ -2,8 +2,9 @@ import apiClient from '../api/client';
 import { Group } from '../types';
 
 export const groupsService = {
+  // C-10 fix: backend expects path param /groups/bootcamp/:bootcampId, not query string
   getGroupsByBootcamp: async (bootcampId: string): Promise<Group[]> => {
-    const res: any = await apiClient.get(`/groups?bootcamp=${bootcampId}`);
+    const res: any = await apiClient.get(`/groups/bootcamp/${bootcampId}`);
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.groups || [];
   },
@@ -17,8 +18,7 @@ export const groupsService = {
     return apiClient.post(`/groups/${groupId}/members`, { userId });
   },
 
-  removeMember: async (groupId: string, userId: string): Promise<any> => {
-    return apiClient.delete(`/groups/${groupId}/members/${userId}`);
-  },
+  // C-11: no backend DELETE /groups/:id/members/:userId route exists — omitted until backend adds it
+  // removeMember: async (groupId: string, userId: string) => { ... }
 };
 

@@ -24,10 +24,8 @@ export const bootcampsService = {
     return res.data ?? res;
   },
 
-  updateBootcamp: async (id: string, data: any): Promise<Bootcamp> => {
-    const res: any = await apiClient.put(`/bootcamps/${id}`, data);
-    return res.data ?? res;
-  },
+  // C-1: no generic PUT /bootcamps/:id on backend — use updateStatus or updateWeights instead
+  // updateBootcamp removed: split into updateStatus(id, status) and updateWeights(id, weights)
 
   updateStatus: async (id: string, status: string): Promise<Bootcamp> => {
     const res: any = await apiClient.put(`/bootcamps/${id}/status`, { status });

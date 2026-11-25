@@ -18,8 +18,9 @@ export const usersService = {
     return apiClient.put(`/auth/admin/reset-password/${userId}`, { newPassword });
   },
 
+  // C-12 fix: no /roles sub-route on backend — PUT /users/:id with roles in body
   updateRoles: async (userId: string, roles: string[]): Promise<any> => {
-    return apiClient.put(`/users/${userId}/roles`, { roles });
+    return apiClient.put(`/users/${userId}`, { roles });
   },
 };
 

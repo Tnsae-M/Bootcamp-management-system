@@ -1,2 +1,5 @@
-- most cards are not clickable.
-- 
+- most cards are not clickable from super admin dashboard.
+- seed files pre-seed is not good enough for starting the manual testing. should involve manual creation of main functional units like bootcamps, sessions,...
+- profile page is not built.
+- same with notification 
+- fix the backend to frontend link/routing since currently many requests are returning 404 after auth is complete.
