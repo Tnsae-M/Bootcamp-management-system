@@ -1,0 +1,2 @@
+- most cards are not clickable.
+- 

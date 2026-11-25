@@ -32,6 +32,7 @@ Consult the ratified ADR documents:
 - [ADR-0011: Frontend Route Partitioning by Role](docs/adr/0011-frontend-route-partitioning-by-role.md) — Role-partitioned portals (`/dashboard/:role/*`) with active role switching for multi-role users.
 - [ADR-0012: Hybrid Auth httpOnly Cookies](docs/adr/0012-hybrid-auth-httponly-cookies.md) — Short-lived Bearer access token in memory + `httpOnly`, `SameSite=Lax` refresh cookie with automatic silent refresh queue.
 - [ADR-0013: Two-Tier UI Deep Primitives](docs/adr/0013-two-tier-ui-deep-primitives.md) — Tier 1 (shadcn/radix base) + Tier 2 (deep domain primitives hiding domain status maps and token logic).
+- [ADR-0014: Backend TypeScript Migration](docs/adr/0014-backend-typescript-migration.md) — Complete migration of all backend source files from JavaScript (`.js`) to TypeScript (`.ts`/`.tsx`) for end-to-end type safety, shared type contracts with the frontend, improved IDE intellisense, and elimination of runtime type errors across all modules (`auth`, `users`, `bootcamps`, `sessions`, `attendance`, `enrollments`, `tasks`, `submissions`, `progress`, `reports`, `groups`, `resources`, `audit`). Prisma-generated types serve as the single source of truth for all database entity shapes.
 - [UI/UX Improvement Plan (Livery-Adapted)](docs/ui-ux-improvement-plan.md) — Structure, motion, 8px radii, 4px grid, and direct voice adapted from Udemy design kit while preserving CSEC-ASTU brand colors (`#2563eb` / `#3b82f6`).
 
 ---
@@ -170,7 +171,14 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
 
 ## 7. What the Next Session Can Focus On
 
-1. **Execute UI/UX Improvement Plan (Phase 1–3):**
+1. **Backend TypeScript Migration (ADR-0014):**
+   - Add `typescript`, `ts-node`/`tsx`, `@types/node`, `@types/express`, `@types/cookie-parser`, `@types/cors`, `@types/bcryptjs`, `@types/jsonwebtoken` as dev dependencies.
+   - Add `tsconfig.json` targeting `ESNext`/`NodeNext` modules with `strict: true`, `outDir: dist`, and path aliases matching the frontend conventions.
+   - Rename all `src/**/*.js` → `.ts` and `tests/**/*.js` → `.ts`; replace `require`/`module.exports` with ES module `import`/`export`.
+   - Replace inline JSDoc type comments with proper TypeScript interfaces/types; leverage Prisma-generated types (`import type { User, Bootcamp, … } from '@prisma/client'`) as the canonical entity shapes across all service and controller layers.
+   - Update `package.json` scripts: `"dev": "tsx watch src/server.ts"`, `"build": "tsc"`, `"start": "node dist/server.js"`.
+   - Ensure all 102 backend tests continue to pass under Vitest with TypeScript source.
+2. **Execute UI/UX Improvement Plan (Phase 1–3):**
    - **Phase 1 (Tokens):** Refine CSS variables in `src/index.css` (neutral dark surfaces, un-tinted soft shadows, 8px default radius).
    - **Phase 2 (Tier 1 Base Controls):** Polish `Button`, `Card`, `Input`, and `Modal` recipes.
    - **Phase 3 (Tier 2 Primitives):** Polish `StatusBadge`, `StatGrid`, and `PageHeader` in sentence case.
