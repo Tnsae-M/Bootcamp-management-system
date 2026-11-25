@@ -1,8 +1,8 @@
 # CSEC-ASTU Bootcamp Management System (BMS) — Agent Handoff Document
 
-**Generated:** 2026-11-20  
+**Generated:** 2026-11-25  
 **Project Workspace:** `c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project`  
-**Current State:** Full stack operational. Backend 100% migrated to PostgreSQL & Prisma with legacy Mongoose completely removed (all 16 `*.model.js` files deleted). Backend test suite 100% green (102/102). Frontend rebuilt across all 5 stages, 100% typechecked (`tsc --noEmit` code 0), production build passing, and frontend test suite 100% green (13/13).
+**Current State:** Backend 100% migrated to PostgreSQL & Prisma with legacy Mongoose completely removed (all 16 `*.model.js` files deleted); backend test suite 100% green (102/102). **12 guaranteed frontend→backend 404 mismatches resolved in `frontend/src/services/*.ts` (ADR-0015)**, which intentionally surfaced **11 TypeScript call-site errors** across 6 frontend files (`attendanceSlice.ts`, `InstructorAttendance.tsx`, `InstructorDashboard.tsx`, `InstructorGroups.tsx`, `InstructorSubmissions.tsx`, `StudentSessions.tsx`, `StudentTasks.tsx`) that still reference the old broken method signatures (`getRecords`, `getSubmissions`, `removeMember`, `overrideAttendance` 3-arg signature). 6 frontend service files still missing (progress, resources, notifications, audit, feedback, induction).
 
 ---
 
@@ -167,25 +167,45 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
    - Enhanced `user.service.js` to return `id`, `_id`, `fullName`, `name`, `universityId`, `department`, and deduplicated `roles`.
 6. **UI/UX Improvement Plan:**
    - Formulated [docs/ui-ux-improvement-plan.md](docs/ui-ux-improvement-plan.md) adapting the Udemy Livery design kit (neutral dark surfaces, 8px default radii, 4px spacing rhythm, 250ms transitions, conversational microcopy) while maintaining CSEC-ASTU Electric Blue brand identity.
+7. **Postman Test Cases (`POSTMAN_TEST_CASES.md`):**
+   - Created [POSTMAN_TEST_CASES.md](POSTMAN_TEST_CASES.md) at the root with 90+ test cases covering all 17 backend modules, all seeded credentials and hardcoded IDs filled in directly, and a 404 diagnostic checklist.
+8. **Frontend ↔ Backend Route Alignment Audit (ADR-0015):**
+   - Full cross-reference of every frontend service call against every registered backend route.
+   - Identified 12 guaranteed 404s, 6 missing frontend service files, 4 role-guard string case mismatches, and an ADR-0012 violation (`localStorage` token storage).
+   - Full findings in [docs/adr/0015-frontend-backend-route-alignment-audit.md](docs/adr/0015-frontend-backend-route-alignment-audit.md).
+9. **12 Frontend Service Fixes (C-1 → C-12):**
+   - `bootcamps.service.ts` — Removed `updateBootcamp` (`PUT /bootcamps/:id` has no backend route).
+   - `sessions.service.ts` — `createSession` → `POST /sessions/propose`; `updateSessionStatus` removed and replaced with `approveSession`, `rejectSession`, `cancelSession`; `getSessionsByBootcamp` corrected to path-param `GET /sessions/bootcamp/:id`.
+   - `attendance.service.ts` — `getRecords()` split into `getMyAttendance()` + `getSessionAttendance(sessionId)`; `overrideAttendance` corrected to `POST /attendance/override` with `{ sessionId, userId, status, overrideNote }`.
+   - `submissions.service.ts` — `getSubmissions` split into `getMySubmissions()` + `getSubmissionsByTask(taskId)`; `submit()` → `POST /submissions` with `taskId` in body; `grade()` changed from `PUT` to `POST`; `returnSubmission()` added.
+   - `groups.service.ts` — `getGroupsByBootcamp` → `GET /groups/bootcamp/:bootcampId`; `removeMember` commented out (no backend route).
+   - `users.service.ts` — `updateRoles` → `PUT /users/:id` with `{ roles }` in body.
 
 ---
 
 ## 7. What the Next Session Can Focus On
 
-1. **Backend TypeScript Migration (ADR-0014):**
+1. **Complete ADR-0015 Remediation (Route & Service Alignment):**
+   - **Update Frontend Call Sites (11 `tsc --noEmit` errors across 7 files):**
+     - `attendanceSlice.ts`, `InstructorAttendance.tsx`, `StudentSessions.tsx`: replace `getRecords` with `getMyAttendance` / `getSessionAttendance`, and update `overrideAttendance` in `InstructorAttendance.tsx` to pass `{ sessionId, userId, status, overrideNote }`.
+     - `InstructorDashboard.tsx`, `InstructorSubmissions.tsx`, `StudentTasks.tsx`: replace `getSubmissions` with `getMySubmissions` / `getSubmissionsByTask`.
+     - `InstructorGroups.tsx`: handle commented-out `removeMember` (or add `DELETE /groups/:id/members/:userId` on backend).
+   - **Create 6 Missing Frontend Services:** `progress.service.ts`, `resources.service.ts`, `notifications.service.ts`, `audit.service.ts`, `feedback.service.ts`, `induction.service.ts` to wire up existing UI pages.
+   - **Backend Guard & Route Fixes:** Standardize `roleGuard` string casing (`"super admin"` → `"SUPER_ADMIN"`), add `DELETE /groups/:id/members/:userId` for `groupsService.removeMember`, and audit `localStorage` token storage vs ADR-0012.
+2. **Backend TypeScript Migration (ADR-0014):**
    - Add `typescript`, `ts-node`/`tsx`, `@types/node`, `@types/express`, `@types/cookie-parser`, `@types/cors`, `@types/bcryptjs`, `@types/jsonwebtoken` as dev dependencies.
    - Add `tsconfig.json` targeting `ESNext`/`NodeNext` modules with `strict: true`, `outDir: dist`, and path aliases matching the frontend conventions.
    - Rename all `src/**/*.js` → `.ts` and `tests/**/*.js` → `.ts`; replace `require`/`module.exports` with ES module `import`/`export`.
    - Replace inline JSDoc type comments with proper TypeScript interfaces/types; leverage Prisma-generated types (`import type { User, Bootcamp, … } from '@prisma/client'`) as the canonical entity shapes across all service and controller layers.
    - Update `package.json` scripts: `"dev": "tsx watch src/server.ts"`, `"build": "tsc"`, `"start": "node dist/server.js"`.
    - Ensure all 102 backend tests continue to pass under Vitest with TypeScript source.
-2. **Execute UI/UX Improvement Plan (Phase 1–3):**
+3. **Execute UI/UX Improvement Plan (Phase 1–3):**
    - **Phase 1 (Tokens):** Refine CSS variables in `src/index.css` (neutral dark surfaces, un-tinted soft shadows, 8px default radius).
    - **Phase 2 (Tier 1 Base Controls):** Polish `Button`, `Card`, `Input`, and `Modal` recipes.
    - **Phase 3 (Tier 2 Primitives):** Polish `StatusBadge`, `StatGrid`, and `PageHeader` in sentence case.
-2. **End-to-End Interactive Verification:**
+4. **End-to-End Interactive Verification:**
    - Test flows live across roles (Guest apply $\rightarrow$ Admin approve $\rightarrow$ Student PIN attendance with `749201` $\rightarrow$ Instructor grade submission $\rightarrow$ Induction leaderboard).
-3. **Deployment Preparation:**
+5. **Deployment Preparation:**
    - Dockerfile creation/review, production environment variable validation, and CI/CD check scripts.
 
 ---

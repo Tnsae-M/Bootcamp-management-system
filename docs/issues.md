@@ -1,5 +1,5 @@
 - most cards are not clickable from super admin dashboard.
 - seed files pre-seed is not good enough for starting the manual testing. should involve manual creation of main functional units like bootcamps, sessions,...
 - profile page is not built.
-- same with notification 
-- fix the backend to frontend link/routing since currently many requests are returning 404 after auth is complete.
+- same with notification (backend `/api/notifications` exists; missing `notifications.service.ts` on frontend — see ADR-0015).
+- [Partially Resolved 2026-11-25] fix the backend to frontend link/routing since currently many requests are returning 404 after auth is complete — 12 guaranteed 404s fixed in frontend services (`bootcamps`, `sessions`, `attendance`, `submissions`, `groups`, `users`); see [docs/adr/0015-frontend-backend-route-alignment-audit.md](adr/0015-frontend-backend-route-alignment-audit.md) and [POSTMAN_TEST_CASES.md](../POSTMAN_TEST_CASES.md). Remaining: update slice/page callers for renamed service methods and wire up the 6 missing frontend services.
