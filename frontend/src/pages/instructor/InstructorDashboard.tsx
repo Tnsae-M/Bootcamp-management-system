@@ -43,15 +43,17 @@ export default function InstructorDashboard() {
   const loadInstructorHub = async () => {
     setLoading(true);
     try {
-      const [sessList, taskList, subList, bcList] = await Promise.all([
+      const [sessList, taskList, bcList] = await Promise.all([
         sessionsService.getSessions().catch(() => []),
         tasksService.getTasks().catch(() => []),
-        submissionsService.getSubmissions().catch(() => []),
         bootcampsService.getBootcamps().catch(() => []),
       ]);
+      const subArrays = await Promise.all(
+        taskList.slice(0, 10).map((t) => submissionsService.getSubmissionsByTask(t.id).catch(() => []))
+      );
       setSessions(sessList);
       setTasks(taskList);
-      setSubmissions(subList);
+      setSubmissions(subArrays.flat());
       setBootcamps(bcList);
     } catch {
       toast.error('Failed to load instructor metrics');

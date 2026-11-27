@@ -4,6 +4,7 @@ import {
   getGroupsByBootcamp,
   assignLeader,
   addMember,
+  removeMember,
 } from "./group.controller.js";
 import { authGuard } from "../../middleware/role.guard.js";
 
@@ -20,5 +21,8 @@ router.put("/:id/leader", authGuard, assignLeader);
 
 // Add member to group
 router.post("/:id/members", authGuard, addMember);
+
+// Remove member from group
+router.delete("/:id/members/:userId", authGuard, removeMember);
 
 export default router;

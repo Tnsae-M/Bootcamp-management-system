@@ -18,7 +18,8 @@ export const groupsService = {
     return apiClient.post(`/groups/${groupId}/members`, { userId });
   },
 
-  // C-11: no backend DELETE /groups/:id/members/:userId route exists — omitted until backend adds it
-  // removeMember: async (groupId: string, userId: string) => { ... }
+  removeMember: async (groupId: string, userId: string): Promise<any> => {
+    return apiClient.delete(`/groups/${groupId}/members/${userId}`);
+  },
 };
 

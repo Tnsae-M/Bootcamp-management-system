@@ -48,12 +48,12 @@ export default function InstructorSubmissions() {
   const loadSubmissions = async () => {
     setLoading(true);
     try {
-      const [subList, taskList] = await Promise.all([
-        submissionsService.getSubmissions().catch(() => []),
-        tasksService.getTasks().catch(() => []),
-      ]);
-      setSubmissions(subList);
+      const taskList = await tasksService.getTasks().catch(() => []);
+      const subArrays = await Promise.all(
+        taskList.map((t) => submissionsService.getSubmissionsByTask(t.id).catch(() => []))
+      );
       setTasks(taskList);
+      setSubmissions(subArrays.flat());
     } catch {
       toast.error('Failed to load submissions queue');
     } finally {
@@ -84,8 +84,11 @@ export default function InstructorSubmissions() {
       toast.success('Submission graded and feedback recorded!');
       setGradeModalOpen(false);
       // Reload
-      const updated = await submissionsService.getSubmissions();
-      setSubmissions(updated);
+      const updated = await submissionsService.getSubmissionsByTask(selectedSub.taskId);
+      setSubmissions((prev) => [
+        ...prev.filter((s) => s.taskId !== selectedSub.taskId),
+        ...updated,
+      ]);
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to submit grade');
     } finally {

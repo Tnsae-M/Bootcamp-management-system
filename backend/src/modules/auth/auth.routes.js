@@ -14,7 +14,6 @@ router.get("/me", authGuard, myUser);
 router.post("/login", loginValidation, validate, login);
 router.post("/refresh", refresh);
 router.post("/logout", logout);
-router.get("/verify/:token", verifyEmailController);
 // router.post("/forgot-password", forgotPasswordController);
 // router.post("/reset-password/:token", resetPasswordController);
 // router.get("/verify/:token", verifyEmailController);

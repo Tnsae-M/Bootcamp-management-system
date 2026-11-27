@@ -12,7 +12,9 @@ export const notificationsService = {
   },
 
   markAllAsRead: async (): Promise<any> => {
-    return apiClient.put('/notifications/read-all');
+    const list = await notificationsService.getNotifications();
+    const unread = list.filter((n: any) => !n.isRead && !n.read);
+    return Promise.all(unread.map((n: any) => notificationsService.markAsRead(n.id)));
   },
 };
 
@@ -33,31 +35,37 @@ export const feedbackService = {
 };
 
 export const resourcesService = {
-  getResources: async (sessionId?: string, bootcampId?: string): Promise<any[]> => {
-    const params: any = {};
-    if (sessionId) params.session = sessionId;
-    if (bootcampId) params.bootcamp = bootcampId;
-    const res: any = await apiClient.get('/resources', { params });
+  getResources: async (sessionId?: string): Promise<any[]> => {
+    if (!sessionId) return [];
+    const res: any = await apiClient.get(`/resources/session/${sessionId}`);
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.resources || [];
   },
 
-  uploadResource: async (formData: FormData): Promise<any> => {
-    return apiClient.post('/resources', formData, {
+  uploadResource: async (formData: FormData, sessionId?: string): Promise<any> => {
+    const targetSessionId = sessionId || (formData.get('sessionId') as string);
+    if (!targetSessionId) {
+      throw new Error('sessionId is required to upload a resource');
+    }
+    return apiClient.post(`/resources/session/${targetSessionId}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
+  },
+
+  downloadResource: async (id: string): Promise<any> => {
+    return apiClient.get(`/resources/${id}/download`, { responseType: 'blob' });
   },
 };
 
 export const projectsService = {
   getProjectsByBootcamp: async (bootcampId: string): Promise<any[]> => {
-    const res: any = await apiClient.get(`/bootcamps/${bootcampId}/projects`);
+    const res: any = await apiClient.get(`/projects/bootcamp/${bootcampId}`);
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.projects || [];
   },
 
   createProject: async (bootcampId: string, payload: any): Promise<any> => {
-    return apiClient.post(`/bootcamps/${bootcampId}/projects`, payload);
+    return apiClient.post('/projects', { bootcampId, ...payload });
   },
 };
 
@@ -78,5 +86,17 @@ export const auditService = {
     const res: any = await apiClient.get('/audit', { params: { limit: limit || 25 } });
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.activities || [];
+  },
+};
+
+export const inductionService = {
+  getLeaderboard: async (bootcampId: string): Promise<any[]> => {
+    const res: any = await apiClient.get(`/induction/leaderboard/${bootcampId}`);
+    const data = res.data ?? res;
+    return Array.isArray(data) ? data : data?.leaderboard || [];
+  },
+
+  recordDecision: async (payload: { enrollmentId: string; decision: string; note?: string }): Promise<any> => {
+    return apiClient.post('/induction/decide', payload);
   },
 };

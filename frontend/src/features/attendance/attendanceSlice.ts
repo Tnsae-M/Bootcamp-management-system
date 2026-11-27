@@ -42,9 +42,12 @@ export const submitAttendanceCode = createAsyncThunk(
 
 export const fetchAttendanceRecords = createAsyncThunk(
   'attendance/fetchRecords',
-  async (params: { sessionId?: string; bootcampId?: string } | undefined, { rejectWithValue }) => {
+  async (params: { sessionId?: string } | undefined, { rejectWithValue }) => {
     try {
-      return await attendanceService.getRecords(params);
+      if (params?.sessionId) {
+        return await attendanceService.getSessionAttendance(params.sessionId);
+      }
+      return await attendanceService.getMyAttendance();
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || 'Failed to load records');
     }

@@ -14,7 +14,6 @@ const router = Router();
 
 // Student submits code (requires login)
 router.post("/submit", authGuard, submitCode);
-router.post("/", authGuard, submitCode);
 
 // Student views own attendance
 router.get("/me", authGuard, getMyAttendance);

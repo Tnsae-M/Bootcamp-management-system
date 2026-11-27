@@ -12,7 +12,6 @@ const router = Router();
 
 // Guest applies to bootcamp
 router.post("/apply", authGuard, apply);
-router.post("/", authGuard, apply);
 
 // Student views own enrollments
 router.get("/me", authGuard, getMyEnrollments);

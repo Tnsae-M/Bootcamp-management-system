@@ -10,6 +10,6 @@ router.get('/analytics', roleGuard(["ADMIN"]), controller.getAnalytics);
 router.post('/', roleGuard(["ADMIN"]), controller.createReport);
 router.get('/:id', roleGuard(["ADMIN"]), controller.getReport);
 router.put('/:id', roleGuard(["ADMIN"]), controller.updateReport);
-router.delete('/:id', roleGuard(['super admin']), controller.deleteReport);
+router.delete('/:id', roleGuard(['SUPER_ADMIN']), controller.deleteReport);
 
 export default router;

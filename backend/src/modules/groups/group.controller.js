@@ -63,3 +63,16 @@ export const addMember = async (req, res, next) => {
     return next(error);
   }
 };
+
+export const removeMember = async (req, res, next) => {
+  try {
+    const result = await groupService.removeMember(req.params.id, req.params.userId);
+    return res.status(200).json({
+      success: true,
+      message: "Member removed from group",
+      data: result,
+    });
+  } catch (error) {
+    return next(error);
+  }
+};

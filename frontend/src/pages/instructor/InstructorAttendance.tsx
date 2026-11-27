@@ -62,7 +62,7 @@ export default function InstructorAttendance() {
   const loadRecords = async (sessId: string) => {
     setLoadingRecords(true);
     try {
-      const recList = await attendanceService.getRecords({ sessionId: sessId });
+      const recList = await attendanceService.getSessionAttendance(sessId);
       setRecords(recList);
     } catch {
       toast.error('Failed to load attendance records');
@@ -84,7 +84,12 @@ export default function InstructorAttendance() {
 
     setSubmittingOverride(true);
     try {
-      await attendanceService.overrideAttendance(selectedRecord.id, newStatus, overrideNote);
+      await attendanceService.overrideAttendance({
+        sessionId: selectedRecord.sessionId || selectedSessionId,
+        userId: selectedRecord.userId,
+        status: newStatus,
+        overrideNote: overrideNote || undefined,
+      });
       toast.success('Attendance override recorded');
       setOverrideModalOpen(false);
       if (selectedSessionId) loadRecords(selectedSessionId);

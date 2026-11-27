@@ -25,7 +25,7 @@ router.get("/session/:sessionId", authGuard, getResourcesBySession);
 router.post(
   "/session/:sessionId",
   authGuard,
-  roleGuard(["admin", "instructor"]),
+  roleGuard(["ADMIN", "INSTRUCTOR"]),
   upload.single("file"),
   uploadResource
 );

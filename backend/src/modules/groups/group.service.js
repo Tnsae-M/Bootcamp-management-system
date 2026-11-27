@@ -229,3 +229,15 @@ export const addMember = async (groupId, userId) => {
     include: { user: true },
   });
 };
+
+export const removeMember = async (groupId, userId) => {
+  const member = await prisma.groupMember.findFirst({
+    where: { groupId, userId },
+  });
+  if (!member) throw buildError("Member not found in this group", 404);
+
+  await prisma.groupMember.delete({
+    where: { id: member.id },
+  });
+  return { deleted: true, groupId, userId };
+};
