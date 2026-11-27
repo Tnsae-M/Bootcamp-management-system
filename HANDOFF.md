@@ -1,8 +1,8 @@
 # CSEC-ASTU Bootcamp Management System (BMS) — Agent Handoff Document
 
-**Generated:** 2026-11-25  
+**Generated:** 2026-11-28  
 **Project Workspace:** `c:/_web_dev_files/CSEC-DEV/csec-astu-bms-project`  
-**Current State:** Backend 100% migrated to PostgreSQL & Prisma with legacy Mongoose completely removed (all 16 `*.model.js` files deleted); backend test suite 100% green (102/102). **12 guaranteed frontend→backend 404 mismatches resolved in `frontend/src/services/*.ts` (ADR-0015)**, which intentionally surfaced **11 TypeScript call-site errors** across 6 frontend files (`attendanceSlice.ts`, `InstructorAttendance.tsx`, `InstructorDashboard.tsx`, `InstructorGroups.tsx`, `InstructorSubmissions.tsx`, `StudentSessions.tsx`, `StudentTasks.tsx`) that still reference the old broken method signatures (`getRecords`, `getSubmissions`, `removeMember`, `overrideAttendance` 3-arg signature). 6 frontend service files still missing (progress, resources, notifications, audit, feedback, induction).
+**Current State:** Backend 100% migrated to PostgreSQL & Prisma with legacy Mongoose completely removed (all 16 `*.model.js` files deleted); backend test suite 100% green (102/102) and frontend unit tests green (13/13). **ADR-0015 & ADR-0016 API contract audit completed:** 12 initial 404 mismatches fixed, plus `StudentSessions.tsx`, `StudentTasks.tsx`, `tasks.service.ts`, and `feedbackService` (`services/index.ts`) fixed and verified. **7 TypeScript call-site errors** remain across 5 frontend files (`attendanceSlice.ts`, `InstructorAttendance.tsx`, `InstructorDashboard.tsx`, `InstructorGroups.tsx`, `InstructorSubmissions.tsx`) plus `asChild` `Button` prop errors. `resourcesService`, `projectsService`, and `notificationsService.markAllAsRead` in `services/index.ts` still need route alignment per ADR-0016, and `induction.service.ts` is not yet created.
 
 ---
 
@@ -34,6 +34,7 @@ Consult the ratified ADR documents:
 - [ADR-0013: Two-Tier UI Deep Primitives](docs/adr/0013-two-tier-ui-deep-primitives.md) — Tier 1 (shadcn/radix base) + Tier 2 (deep domain primitives hiding domain status maps and token logic).
 - [ADR-0014: Backend TypeScript Migration](docs/adr/0014-backend-typescript-migration.md) — Complete migration of all backend source files from JavaScript (`.js`) to TypeScript (`.ts`/`.tsx`) for end-to-end type safety, shared type contracts with the frontend, improved IDE intellisense, and elimination of runtime type errors across all modules (`auth`, `users`, `bootcamps`, `sessions`, `attendance`, `enrollments`, `tasks`, `submissions`, `progress`, `reports`, `groups`, `resources`, `audit`). Prisma-generated types serve as the single source of truth for all database entity shapes.
 - [ADR-0015: Frontend ↔ Backend Route Alignment Audit](docs/adr/0015-frontend-backend-route-alignment-audit.md) — Full cross-reference of every frontend service call against every registered backend route. Identified 12 guaranteed 404 routes (wrong method, wrong path, non-existent endpoint), 6 missing frontend service files (progress, resources, notifications, audit, feedback, induction), 4 role-guard string case mismatches, and an ADR-0012 violation where the access token is persisted to `localStorage` instead of kept in memory.
+- [ADR-0016: API Contract Audit & Endpoint Cleanup](docs/adr/0016-api-contract-audit-and-cleanup.md) — Follow-up contract audit classifying broken 404 endpoints that need replacing (`resourcesService`, `projectsService`), redundant backend aliases not needed (`POST /attendance/`, `POST /enrollments/`, `GET /auth/verify/:token`, `POST /divisions/:divisionId/bootcamps`), dead frontend methods (`notificationsService.markAllAsRead`), and missing `authGuard` / lowercase `roleGuard` issues.
 - [UI/UX Improvement Plan (Livery-Adapted)](docs/ui-ux-improvement-plan.md) — Structure, motion, 8px radii, 4px grid, and direct voice adapted from Udemy design kit while preserving CSEC-ASTU brand colors (`#2563eb` / `#3b82f6`).
 
 ---
@@ -180,18 +181,24 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
    - `submissions.service.ts` — `getSubmissions` split into `getMySubmissions()` + `getSubmissionsByTask(taskId)`; `submit()` → `POST /submissions` with `taskId` in body; `grade()` changed from `PUT` to `POST`; `returnSubmission()` added.
    - `groups.service.ts` — `getGroupsByBootcamp` → `GET /groups/bootcamp/:bootcampId`; `removeMember` commented out (no backend route).
    - `users.service.ts` — `updateRoles` → `PUT /users/:id` with `{ roles }` in body.
+10. **API Contract Audit & Student/Task/Feedback Fixes (ADR-0016, 2026-11-28):**
+    - `StudentSessions.tsx` — Replaced removed `attendanceService.getRecords()` with `attendanceService.getMyAttendance()` in `loadSessionsData` and `handlePinSubmit` (fixed synchronous `TypeError` that blocked session rendering).
+    - `StudentTasks.tsx` — Replaced removed `submissionsService.getSubmissions()` with `submissionsService.getMySubmissions()` in `loadTasksData` and `handleSubmitWork` (fixed synchronous `TypeError` that blocked task rendering).
+    - `tasks.service.ts` — Fixed `getTasks()` query parameters from `bootcamp` / `session` to `bootcampId` / `type` to match `task.controller.js`.
+    - `services/index.ts` (`feedbackService`) — Aligned `getFeedback` (`GET /feedback/session/${sessionId}`), `submitFeedback` (`POST /feedback/session` with `{ sessionId, ...payload }`), and added `submitPeerReview` (`POST /feedback/peer-review`).
+    - Documented remaining contract mismatches, redundant backend aliases, and dead endpoints in [docs/adr/0016-api-contract-audit-and-cleanup.md](docs/adr/0016-api-contract-audit-and-cleanup.md).
 
 ---
 
 ## 7. What the Next Session Can Focus On
 
-1. **Complete ADR-0015 Remediation (Route & Service Alignment):**
-   - **Update Frontend Call Sites (11 `tsc --noEmit` errors across 7 files):**
-     - `attendanceSlice.ts`, `InstructorAttendance.tsx`, `StudentSessions.tsx`: replace `getRecords` with `getMyAttendance` / `getSessionAttendance`, and update `overrideAttendance` in `InstructorAttendance.tsx` to pass `{ sessionId, userId, status, overrideNote }`.
-     - `InstructorDashboard.tsx`, `InstructorSubmissions.tsx`, `StudentTasks.tsx`: replace `getSubmissions` with `getMySubmissions` / `getSubmissionsByTask`.
+1. **Complete ADR-0015 & ADR-0016 Remediation (Route & Service Alignment):**
+   - **Update Remaining Frontend Call Sites (7 `tsc --noEmit` errors across 5 files):**
+     - `attendanceSlice.ts`, `InstructorAttendance.tsx`: replace `getRecords` with `getMyAttendance` / `getSessionAttendance`, and update `overrideAttendance` in `InstructorAttendance.tsx` to pass `{ sessionId, userId, status, overrideNote }`.
+     - `InstructorDashboard.tsx`, `InstructorSubmissions.tsx`: replace `getSubmissions` with `getMySubmissions` / `getSubmissionsByTask`.
      - `InstructorGroups.tsx`: handle commented-out `removeMember` (or add `DELETE /groups/:id/members/:userId` on backend).
-   - **Create 6 Missing Frontend Services:** `progress.service.ts`, `resources.service.ts`, `notifications.service.ts`, `audit.service.ts`, `feedback.service.ts`, `induction.service.ts` to wire up existing UI pages.
-   - **Backend Guard & Route Fixes:** Standardize `roleGuard` string casing (`"super admin"` → `"SUPER_ADMIN"`), add `DELETE /groups/:id/members/:userId` for `groupsService.removeMember`, and audit `localStorage` token storage vs ADR-0012.
+   - **Fix `services/index.ts` & Missing Services:** Align `resourcesService` (`GET/POST /resources/session/:sessionId`), `projectsService` (`GET /projects/bootcamp/:bootcampId`, `POST /projects`), remove or implement `notificationsService.markAllAsRead`, and create `induction.service.ts`.
+   - **Backend Guard & Cleanup Fixes:** Add `authGuard` to `division.route.js`, standardize `roleGuard` string casing (`"super admin"` → `"SUPER_ADMIN"`), remove redundant route aliases listed in ADR-0016, and audit `localStorage` token storage vs ADR-0012.
 2. **Backend TypeScript Migration (ADR-0014):**
    - Add `typescript`, `ts-node`/`tsx`, `@types/node`, `@types/express`, `@types/cookie-parser`, `@types/cors`, `@types/bcryptjs`, `@types/jsonwebtoken` as dev dependencies.
    - Add `tsconfig.json` targeting `ESNext`/`NodeNext` modules with `strict: true`, `outDir: dist`, and path aliases matching the frontend conventions.
@@ -199,10 +206,12 @@ The database is seeded (`npm run seed --prefix backend`) with realistic datasets
    - Replace inline JSDoc type comments with proper TypeScript interfaces/types; leverage Prisma-generated types (`import type { User, Bootcamp, … } from '@prisma/client'`) as the canonical entity shapes across all service and controller layers.
    - Update `package.json` scripts: `"dev": "tsx watch src/server.ts"`, `"build": "tsc"`, `"start": "node dist/server.js"`.
    - Ensure all 102 backend tests continue to pass under Vitest with TypeScript source.
-3. **Execute UI/UX Improvement Plan (Phase 1–3):**
+3. **Execute UI/UX Improvement Plan (Phase 1–3) & Manual Issues (`docs/issues.md`):**
    - **Phase 1 (Tokens):** Refine CSS variables in `src/index.css` (neutral dark surfaces, un-tinted soft shadows, 8px default radius).
-   - **Phase 2 (Tier 1 Base Controls):** Polish `Button`, `Card`, `Input`, and `Modal` recipes.
-   - **Phase 3 (Tier 2 Primitives):** Polish `StatusBadge`, `StatGrid`, and `PageHeader` in sentence case.
+   - **Phase 2 (Tier 1 Base Controls):** Polish `Button`, `Card`, `Input`, and `Modal` recipes; implement `asChild` support (via Radix `Slot`) in `components/ui/button.tsx` or remove `asChild` from callers (`LandingPage`, `NotFoundPage`, `ResetPasswordPage`, `InstructorResources`, `InstructorSubmissions`, `StudentResources`) to eliminate the React DOM warning and 12 `tsc` errors.
+   - **Phase 3 (Tier 2 Primitives):** Polish `StatusBadge`, `StatGrid` (minimal cards: title, value, icon only — drop descriptions), and `PageHeader` in sentence case.
+   - **Navbar & Toast Fixes (`docs/issues.md`):** Add proper outer wrapper styling to `Navbar`, and configure auto-dismiss `duration` on `<Toaster />` (Sonner).
+   - **Student Dashboard & Bootcamp Card Cleanup (`docs/issues.md`):** Remove redundant `"View Sessions"` and `"Track Progress"` buttons from student bootcamp cards, and remove the standalone Quick Attendance Check-in card from `StudentDashboard.tsx` (keep PIN check-in per-session). Reference `docs/image` ("ui ux inspiration") for minimal dashboard layout.
 4. **End-to-End Interactive Verification:**
    - Test flows live across roles (Guest apply $\rightarrow$ Admin approve $\rightarrow$ Student PIN attendance with `749201` $\rightarrow$ Instructor grade submission $\rightarrow$ Induction leaderboard).
 5. **Deployment Preparation:**
