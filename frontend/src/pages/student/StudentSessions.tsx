@@ -54,7 +54,7 @@ export default function StudentSessions() {
     try {
       const [sessList, attList] = await Promise.all([
         sessionsService.getSessions().catch(() => []),
-        attendanceService.getRecords().catch(() => []),
+        attendanceService.getMyAttendance().catch(() => []),
       ]);
       setSessions(sessList);
       setAttendanceRecords(attList);
@@ -81,7 +81,7 @@ export default function StudentSessions() {
       toast.success('Attendance verified and recorded!');
       setPinCode('');
       // Reload records
-      const updated = await attendanceService.getRecords();
+      const updated = await attendanceService.getMyAttendance();
       setAttendanceRecords(updated);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Invalid or expired attendance PIN.';

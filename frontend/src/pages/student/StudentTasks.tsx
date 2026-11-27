@@ -48,7 +48,7 @@ export default function StudentTasks() {
     try {
       const [taskList, subList] = await Promise.all([
         tasksService.getTasks().catch(() => []),
-        submissionsService.getSubmissions().catch(() => []),
+        submissionsService.getMySubmissions().catch(() => []),
       ]);
       setTasks(taskList);
       setSubmissions(subList);
@@ -88,7 +88,7 @@ export default function StudentTasks() {
       toast.success(`Submission uploaded for "${selectedTask.title}"!`);
       setSubmitModalOpen(false);
       // Reload submissions
-      const updated = await submissionsService.getSubmissions();
+      const updated = await submissionsService.getMySubmissions();
       setSubmissions(updated);
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Failed to record submission';

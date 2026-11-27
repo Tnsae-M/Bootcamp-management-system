@@ -2,10 +2,10 @@ import apiClient from '../api/client';
 import { Task } from '../types';
 
 export const tasksService = {
-  getTasks: async (bootcampId?: string, sessionId?: string): Promise<Task[]> => {
+  getTasks: async (bootcampId?: string, type?: string): Promise<Task[]> => {
     const params: any = {};
-    if (bootcampId) params.bootcamp = bootcampId;
-    if (sessionId) params.session = sessionId;
+    if (bootcampId) params.bootcampId = bootcampId;
+    if (type) params.type = type;
     const res: any = await apiClient.get('/tasks', { params });
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.tasks || [];

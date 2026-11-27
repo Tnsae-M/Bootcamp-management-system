@@ -18,13 +18,17 @@ export const notificationsService = {
 
 export const feedbackService = {
   getFeedback: async (sessionId: string): Promise<any[]> => {
-    const res: any = await apiClient.get(`/sessions/${sessionId}/feedback`);
+    const res: any = await apiClient.get(`/feedback/session/${sessionId}`);
     const data = res.data ?? res;
     return Array.isArray(data) ? data : data?.feedbacks || [];
   },
 
   submitFeedback: async (sessionId: string, payload: { rating: number; comment?: string }): Promise<any> => {
-    return apiClient.post(`/sessions/${sessionId}/feedback`, payload);
+    return apiClient.post('/feedback/session', { sessionId, ...payload });
+  },
+
+  submitPeerReview: async (payload: { submissionId: string; revieweeId: string; rating: number; comment?: string }): Promise<any> => {
+    return apiClient.post('/feedback/peer-review', payload);
   },
 };
 
